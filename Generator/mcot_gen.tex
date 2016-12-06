@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{fontspec}
+\usepackage[frenchb]{babel}
+\usepackage{xcolor}
+\usepackage[a4paper]{geometry}
+\geometry{top=1.5cm, bottom=1.5cm, left=2cm, right=2cm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\let\endtitlepage\relax
+
+\title{\textbf{\input{title.tex}}}
+\author{\input{authors.tex}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Positionnement thématique}
+\textit{\input{them.tex}}
+
+\section*{Mots clés}
+\begin{tabular}{ll}
+\textbf{Mots-clés (en français)} & \textbf{Mots-clés (en français)}\\
+\input{keywords.tex}
+\end{tabular}
+
+\section*{Bibliographie documentée}
+\input{biblio.tex}
+
+\section*{Problématique retenue}
+\input{problematic.tex}
+
+\section*{Objectifs du TIPE}
+\begin{enumerate}
+\input{goals.tex}
+\end{enumerate}
+
+\bibliographystyle{alpha}
+\bibliography{bib.bib}
+\end{document} 
