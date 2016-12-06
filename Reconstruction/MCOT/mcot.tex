@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{fontspec}
+\usepackage[frenchb]{babel}
+\usepackage{xcolor}
+\usepackage[a4paper]{geometry}
+\geometry{top=1.5cm, bottom=1.5cm, left=2cm, right=2cm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\let\endtitlepage\relax
+
+\title{\textbf{Reconstruction de formes multi-échelles en dimensions deux et trois grâce à la strucure de complexes de témoins}}
+\author{CHALUMEAU Adam,	ELIS Pierre}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Positionnement thématique}
+\textit{Géométrie classique, Topologie, Géométrie algorithmique, Programmation}
+
+\section*{Mots clés}
+\begin{tabular}{ll}
+\textbf{Mots-clés (en français)} & \textbf{Mots-clés (en français)}\\
+Triangulation de Delaunay        & Delaunay triangulation\\
+Reconstruction de formes         & Manifold reconstruction\\
+Complexes de témoins             & Witness complexes\\
+Modélisation 3D                  & 3D modelisation\\
+Algorithme de Guibas et Oudot    & Guibas and Oudot algorithm
+\end{tabular}
+
+\section*{Bibliographie documentée}
+Dans de nombreux domaines, il est courant d'avoir à disposition un nuage de points, obtenu de diverses façons, et d'alors avoir à l'interpréter graphiquement, afin d'en dégager une certaine forme, un certain relief. En géologie, ce principe permet de visualiser les structures sous-terraines, grâce à la donnée d'un nuage de point obtenu par sondage lors d'un forage par exemple, et par conséquent, permet d'avoir une meilleure connaissance des sous-sols. En médecine, reconstruire des données d'images médicales permet de produire une modélisation de parties du corps humain suite à un scanner, ou encore de mesurer précisement et quantitativement de façon non invasive des données sur un patient obtenues encore une fois par scanner ou IRM. Mais aussi de manière plus générale, la reconstruction de formes à partir d'un nuage de points facilite considérablement la modélisation 3D d'un objet réel, il suffit alors d'en extraire par scanner un nuage de points assez précis. Nous pouvons déjà relever une problématique qui vient naturellement : quelles sont les formes que l'on peut espérer reconstruire ? Il est logique par exemple, qu'un algorithme de reconstruction ne pourra donner un résultat satisfaisant si le nuage de point n'est pas assez ``dense''. Une approche mathématique a été introduite par Amenta et Bern \cite{echa}, celle d'$\epsilon$-echantillon, un peu avant les années 2000. De plus, on image facilement que si la courbe que l'on veut reconstruire contient des points anguleux, il faudra alors une très grande densité de points à ce niveau afin que l'algorithme ne renvoie pas quelque chose de trop arrondi. Ceci se généralise également pour les points qui ne sont pas forcément anguleux : si le rayon de courbure en un point est trop petit alors il faudra une grande densité de point à ce niveau. C'est la notion de \textit{reach} introduite par H. Federer \cite{fede} qui permet d'appréhender ce phénomène. Étant donné une forme géométrique, on peut tracer son squelette topologique \cite{sque}, et alors considérer la fonction qui à un point de cette courbe associe sa distance au squelette topologique (nommée \textit{local feature size}, $\mathrm{lfs}_S$). C'est la donnée de cette fonction en un certain point qui nous renseigne alors sur la densité minimale de points nécessaire en ce même point pour que la reconstruction puisse être correcte. On dispose alors d'un premier critère nécessaire, ou en tout cas qui se veut nécessaire, à la possibilité de la reconstruction d'une forme géométrique : il faut que son \textit{reach} soit strictement positif, où le reach est $\rho=\min_S\mathrm{lfs}$. Néanmoins la reconstruction est possible pour une classe plus large de formes géométriques, les formes $k$-lipschiztiennes \cite{lips}. Ainsi se pose la question de ce qu'est la classe la plus large de formes géométriques dont on peut espérer obtenir une reconstruction raisonnable, et dans quelles conditions sur le nuage de points à disposition on peut alors la reconstruire. De plus un nouveau problème se pose, qui est celui de l'échelle de reconstruction. En effet, un nombre immense de formes, dont la topologie diffère de façon importante, peuvent interpoler un nuage de point donné. Jusque très récemment, les algorithmes réalisant la reconstruction géométrique d'un nuage de points se basaient sur la donnée de la triangulation de Delaunay de ce nuage de points \cite{lyon}, notion très liée au diagramme de Voronoi de ce nuage de points. Ces deux objets, duaux l'un de l'autre, qui semblaient indispensables pour la reconstruction de forme, ont dont été étudiés précisemment et de nombreux algorithmes sont voués à leur calcul. On peut par exemple citer l'algorithme de Fortune \cite{lyon}, qui calcule le diagramme de Voronoi d'un nuage de points en $O(n\log n)$, ce qui est la meilleure complexité possible. Néanmoins ces deux structures sont assez lourdes à traiter informatiquement. En outre, les algorithmes qui en découlent peuvent être qualifiés d'algorithmes à échelle constante, c'est à dire qu'étant donné un nuage de point, l'algorithme renverra une forme reconstruite tant bien que mal, et au risque que sa topologie soit totalement différente de celle attendue. On peut prendre l'exemple donné dans l'article de Guibas et Oudot \cite{witn} de la spirale en ressort enroulée autour d'un tore : si les anneaux de la spirale sont très proches, alors un $\epsilon$-echantillon de celle-ci porte en lui une information ambivalente, on peut tantôt le considérer comme le nuage de points de la spirale qu'il est sensé représenter, mais également comme le nuage de point du tore sous-jacent. En 2007, Guibas et Oudot proposent le premier algorithme qui donne une solution concrète aux deux problèmes relevés ci-dessus : ce dernier utilise une nouvelle structure, différente du diagramme de Voronoi et de la triangulation de Delaunay, le complexe de témoins \cite{main}. Cet algorithme est un algorithme multi-échelles, c'est à dire qu'à partir d'un seul nuage de point il va construire plusieurs formes possibles, de la plus grossière à la plus contrastée. Alors faut-il savoir quelle est la bonne forme, parmi celles-ci. Cette nouvelle structure possèdes des propriétés très intéressantes qui varient selon la dimension de l'espace ambiant : en deuxième dimension, on montre qu'elle coincide avec le Delaunay restreint du nuage de points relativement à la courbe \cite{main}, tandis qu'en troisième dimension, une seule inclusion est exacte, l'autre pouvant être réparée en assouplissant la définition des complexes de témoins \cite{arbi}. Nous porterons toute notre attention à l'étude théorique de ces objets informatiques et mathématiques dans le cas particulier de la dimension deux, et nous programmerons l'algorithme de Guibas et Oudot \cite{webs} en dimension deux puis en dimension trois afin de l'application à un problème concrêt qui est celui de la modélisation d'organes à partir d'un nuage de points obtenu par scanner.
+
+\section*{Problématique retenue}
+La rapidité et l'exactitude d'un algorithme de reconstruction sont deux critères très importants. Nous nous pencherons sur la question de qu'est-ce qu'un algorithme de reconstruction exact, question à l'apparence évidente mais dont les réponses ne le sont pas nécessairement, comme nous avons pu le voir. De plus après s'être interrogés sur les résultats théoriques des traveaux de Guibas et Oudot nous nous pencherons sur une application concrète de cette algorithme.
+
+\section*{Objectifs du TIPE}
+\begin{enumerate}
+	\item Résultats théoriques : étude des traveaux de Guibas et Oudot qui correspondent concrètement à l'état actuel de la recherche dans le domaine de la reconstruction de formes. C'est à dire répondre aux questions que nous avons posées et assurer des résultats théoriques à cet algorithme
+	\item Programmer l'algorithme, programmer un générateur d'$\epsilon$-echantillons dans certaines conditions afin de pouvoir le tester, pour enfin l'appliquer à une donnée plus conséquente en rapport avec la modélisation d'organes.
+\end{enumerate}
+
+\bibliographystyle{alpha}
+\bibliography{biblio}
+\end{document} 
