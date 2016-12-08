@@ -7,8 +7,8 @@ using namespace std;
 
 inline string remove_extension(string &s) {
 	size_t lastdot = s.find_last_of('.');
-    if (lastdot == string::npos) return s;
-    return s.substr(0, lastdot);
+	if (lastdot == string::npos) return s;
+	return s.substr(0, lastdot);
 }
 
 int distance(vector<int> *p1, vector<int> *p2) {
@@ -58,7 +58,7 @@ void reconstruction(vector< vector<int> > &points, ofstream &ofile) {
 	size_t n = points.size();
 	vector< vector<int>* > L;
 	L.push_back(&(points[0]));
-	vector< vector< vector<int>* > > neighbours(n, (vector< vector<int>* >){2, L[0]});
+	vector< vector< vector<int>* > > neighbours(n, {2, L[0]});
 	vector< vector< vector<int>* > > CWL;
 	vector<int> *first = L[0];
 	size_t i = 1;
@@ -69,12 +69,12 @@ void reconstruction(vector< vector<int> > &points, ofstream &ofile) {
 		update_neighbours(points, neighbours, L, cur);
 
 		if (i == 1) {
-			CWL.push_back((vector< vector<int>* >){L[0], cur});
+			CWL.push_back({L[0], cur});
 			continue;
 		}
 		else if (i == 2) {
-			CWL.push_back((vector< vector<int>* >){L[0], cur});
-			CWL.push_back((vector< vector<int>* >){L[1], cur});
+			CWL.push_back({L[0], cur});
+			CWL.push_back({L[1], cur});
 			continue;
 		}
 
@@ -82,8 +82,8 @@ void reconstruction(vector< vector<int> > &points, ofstream &ofile) {
 		vector<int> *nearest1 = neighbours[j][0];
 		vector<int> *nearest2 = neighbours[j][1];
 
-		CWL.push_back(vector< vector<int>* > {nearest1, cur});
-		CWL.push_back(vector< vector<int>* > {nearest2, cur});
+		CWL.push_back({nearest1, cur});
+		CWL.push_back({nearest2, cur});
 		size_t m = CWL.size();
 		for (size_t k = 0; k < m; ++k) {
 			if ((CWL[k][0] == nearest1 or CWL[k][0] == nearest2) and (CWL[k][1] == nearest1 or CWL[k][1] == nearest2)) {
