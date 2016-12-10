@@ -7,8 +7,8 @@ using namespace std;
 
 inline string remove_extension(string &s) {
 	size_t lastdot = s.find_last_of('.');
-    if (lastdot == string::npos) return s;
-    return s.substr(0, lastdot);
+	if (lastdot == string::npos) return s;
+	return s.substr(0, lastdot);
 }
 
 double distance(vector<double> *p1, vector<double> *p2) {
@@ -50,7 +50,7 @@ void update_neighbours(vector< vector<double> > &points, vector< vector< vector<
 		if (d > distance(&(points[i]), last)) {
 			*farthest = last;
 		}
-    }
+	}
 }
 
 void reconstruction(vector< vector<double> > &points, ofstream &ofile) {
@@ -134,13 +134,13 @@ int main(int argc, char **argv) {
 	vector< vector<double> > points;
 	size_t i = 0;
 	while (!ifile.eof()) {
-        vector<double> point(2, 0);
+		vector<double> point(2, 0);
 		points.push_back(point);
 		double x, y;
 		ifile >> x;
 		ifile >> y;
-        points[i][0] = x;
-        points[i][1] = y;
+		points[i][0] = x;
+		points[i][1] = y;
 		i++;
 	}
 	reconstruction(points, ofile);
