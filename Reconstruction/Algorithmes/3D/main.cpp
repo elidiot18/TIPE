@@ -1,8 +1,10 @@
+// Imports
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <algorithm>
+
 using namespace std;
 
 inline string remove_extension(string&);
@@ -22,6 +24,8 @@ void add_cwl(size_t, size_t, size_t k, vector< vector< vector< vector<size_t> > 
 void add_rvl(size_t, vector< vector< vector<size_t> > >*);
 void add_rvl(size_t, size_t, vector< vector< vector<size_t> > >*);
 void add_rvl(size_t, size_t, size_t k, vector< vector< vector<size_t> > >*);
+inline size_t _min(size_t, size_t);
+inline size_t _max(size_t, size_t);
 
 int main(int argc, char **argv) {
     if (argc <= 1) {
@@ -70,8 +74,10 @@ int main(int argc, char **argv) {
 }
 
 void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
-    cout << "You entered the reconstruction function" << endl;
     size_t n = W.size();
+    for (size_t k = 0; k < n; ++k) {
+        ofile << "\t" << W[k][0] << " " << W[k][1] << " " << W[k][2] << endl;
+    }
 
     vector<size_t> L;
     L.push_back(0);
@@ -79,6 +85,9 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
     vector< vector<size_t> > neighbours(n, vector<size_t>(3, 0));
 
     vector< vector < vector< vector<size_t> > > > CWL(3, vector < vector< vector<size_t> > >(n));
+
+    size_t faces = 0;
+
     size_t i = 1;
     while (i < n) {
         size_t p = farthest(W, L);
@@ -91,14 +100,13 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
             size_t neigh1 = neighbours[k][0];
             size_t neigh2 = neighbours[k][1];
             size_t neigh3 = neighbours[k][2];
-
             double d1 = distance(k, neigh1, W);
             double d2 = distance(k, neigh2, W);
             double d3 = distance(k, neigh3, W);
 
-            size_t n1 = min(min(neigh1, neigh2), neigh3);
-            size_t n3 = max(max(neigh1, neigh2), neigh3);
-            size_t n2 = neigh1 + neigh2 + neigh3 - n1 - n2;
+            size_t n1 = _min(_min(neigh1, neigh2), neigh3);
+            size_t n3 = _max(_max(neigh1, neigh2), neigh3);
+            size_t n2 = neigh1 + neigh2 + neigh3 - n1 - n3;
 
             double dp = distance(k, p, W);
             if (d3 > dp || (n1 == n2 && n2 == n3)) {
@@ -125,7 +133,6 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
                 }
             }
         }
-        cout << "reverse landmarks computed" << endl;
 
         if (i == 1) {
             add_cwl(L[0], p, &CWL);
@@ -140,9 +147,7 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
             size_t q = reverse_landmarks[0].size();
             for (size_t k = 0; k < q; ++k) {
                 if (is_witnessed(reverse_landmarks[0][k][0], p, W, neighbours)) {
-                    cout << "a1" << endl;
                     add_cwl(reverse_landmarks[0][k][0], p, &CWL);
-                    cout << "a2" << endl;
                 }
             }
 
@@ -150,47 +155,35 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
             for (size_t k = 0; k < q; ++k) {
                 if (in(reverse_landmarks[1][k][0], reverse_landmarks[1][k][1], CWL)) {
                     if (!is_witnessed(reverse_landmarks[1][k][0], reverse_landmarks[1][k][1], W, neighbours)) {
-                        cout << "b1" << endl;
                         take_out(reverse_landmarks[1][k][0], reverse_landmarks[1][k][1], &CWL);
-                        cout << "b2" << endl;
                     }
                 }
                 else {
                     if (is_witnessed(reverse_landmarks[1][k][0], p, W, neighbours)) {
-                        cout << "c1" << endl;
                         add_cwl(reverse_landmarks[1][k][0], p, &CWL);
-                        cout << "c2" << endl;
                     }
-                    cout << reverse_landmarks[1][k][1];
                     if (is_witnessed(reverse_landmarks[1][k][1], p, W, neighbours)) {
-                        cout << "d1" << endl;
                         add_cwl(reverse_landmarks[1][k][1], p, &CWL);
-                        cout << "d2" << endl;
-                        /*
-                        
-                        
-                        ça bug à peu près ici
-                        
-                        
-                        
-                        */
                     }
                 }
             }
 
             q = reverse_landmarks[2].size();
             for (size_t k = 0; k < q; ++k) {
-                if (in(reverse_landmarks[2][k][0], reverse_landmarks[2][k][1], reverse_landmarks[2][k][2],CWL)) {
+                if (in(reverse_landmarks[2][k][0], reverse_landmarks[2][k][1], reverse_landmarks[2][k][2], CWL)) {
                     if (!is_witnessed(reverse_landmarks[2][k][0], reverse_landmarks[2][k][1], reverse_landmarks[2][k][2], W, neighbours)) {
                         take_out(reverse_landmarks[2][k][0], reverse_landmarks[2][k][1], reverse_landmarks[2][k][2], &CWL);
+                        faces--;
                     }
                 }
                 else {
                     if (is_witnessed(reverse_landmarks[2][k][0], reverse_landmarks[2][k][1], p, W, neighbours)) {
                         add_cwl(reverse_landmarks[2][k][0], reverse_landmarks[2][k][1], p, &CWL);
+                        faces++;
                     }
                     if (is_witnessed(reverse_landmarks[2][k][1], reverse_landmarks[2][k][2], p, W, neighbours)) {
                         add_cwl(reverse_landmarks[2][k][1], reverse_landmarks[2][k][2], p, &CWL);
+                        faces++;
                     }
                 }
             }
@@ -199,36 +192,48 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
         cout << "Reconstruction n. " << i << " : " << endl;
         ofile << "Reconstruction n. " << i << " : " << endl;
 
-        size_t m0 = CWL[0].size();
-        //cout << "m0 = " << m0 << endl;
-        size_t m1 = CWL[1].size();
-        //cout << "m1 = " << m1 << endl;
-        for (size_t k = 0; k < m0; ++k) {
-            //cout << "k = " << k << endl;
-            size_t s = CWL[0][k].size();
-            //cout << "s = " << s << endl;
+
+        /* Geomview OFF format */
+
+        // Syntax : "OFF"
+        ofile << "OFF" << endl;
+
+        // Syntax : "number of vertices" "number of faces" "number of edges"
+        ofile << i << " " << faces << endl;
+
+        // Syntax : x y z for each vertex
+        /*for (size_t k = 0; k < i; ++k) {
+            ofile << "\t" << W[k][0] << " " << W[k][1] << " " << W[k][2] << endl;
+        }*/
+
+        // Syntax : n i j k ... for each face of n vertices which indexes are i j k...
+        for (size_t k = 0; k < n; ++k) {
+            size_t s = CWL[1][k].size();
             for (size_t l = 0; l < s; ++l) {
-                //cout << "l = " << l << endl;
+                ofile << 4 << " " << k  << " " << CWL[1][k][l][0]  << " "  << CWL[1][k][l][0] << endl;
+            }
+        }
+
+
+        /*size_t m0 = CWL[0].size();
+        size_t m1 = CWL[1].size();
+        for (size_t k = 0; k < m0; ++k) {
+            size_t s = CWL[0][k].size();
+            for (size_t l = 0; l < s; ++l) {
                 double x1 = W[k][0], y1 = W[k][1], z1 = W[k][2];
                 double x2 = W[CWL[0][k][l][0]][0], y2 = W[CWL[0][k][l][0]][1], z2 = W[CWL[0][k][l][0]][2];
                 ofile << "plt.plot((" << x1 << ", " << x2 << "), " << "(" << y1 << ", " << y2 << "), " << "(" << z1 << ", " << z2 << "))" << endl;
-                //ofile << "Edge : " << k << "; " << CWL[k][l] << endl;
-            }
+
         }
         for (size_t k = 0; k < m1; ++k) {
             size_t s = CWL[1][k].size();
             for (size_t l = 0; l < s; ++l) {
                 double x1 = W[k][0], y1 = W[k][1], z1 = W[k][2];
-                cout << "1" << endl;
                 double x2 = W[CWL[1][k][l][0]][0], y2 = W[CWL[1][k][l][0]][1], z2 = W[CWL[1][k][l][0]][2];
-                cout << "2" << endl;
                 double x3 = W[CWL[1][k][l][1]][0], y3 = W[CWL[1][k][l][1]][1], z3 = W[CWL[1][k][l][1]][2];
-                cout << "3" << endl;
                 ofile << "plt.plot((" << x1 << ", " << x2 << ", " << x3 << "), " << "(" << y1 << ", " << y2 << ", " << y3 << "), " << "(" << z1 << ", " << z2 << ", " << z3 << "))" << endl;
-                //ofile << "Edge : " << k << "; " << CWL[k][l] << endl;
-            }
-        }
-        cout << "ok" << endl;
+
+        }*/
         i++;
     }
 }
@@ -293,19 +298,19 @@ bool is_witnessed(size_t i, size_t j, size_t k, vector< vector<double> > &W, vec
 }
 
 bool in(size_t i, size_t j, vector< vector< vector< vector<size_t> > > > &CWL) {
-    return find(CWL[i][0].begin(), CWL[i][0].end(), vector<size_t>{j}) != CWL[i][0].end();
+    return find(CWL[0][i].begin(), CWL[0][i].end(), vector<size_t>{j}) != CWL[0][i].end();
 }
 
 bool in(size_t i, size_t j, size_t k, vector< vector< vector< vector<size_t> > > > &CWL) {
-    return find(CWL[i][1].begin(), CWL[i][1].end(), vector<size_t>{j, k}) != CWL[i][1].end();
+    return find(CWL[1][i].begin(), CWL[1][i].end(), vector<size_t>{j, k}) != CWL[1][i].end();
 }
 
 void take_out(size_t i, size_t j, vector< vector< vector< vector<size_t> > > > *CWL) {
-    ((*CWL)[i][0]).erase(remove(((*CWL)[i][0]).begin(), ((*CWL)[i][0]).end(), vector<size_t>{j}), ((*CWL)[i][0]).end());
+    ((*CWL)[0][i]).erase(remove(((*CWL)[0][i]).begin(), ((*CWL)[0][i]).end(), vector<size_t>{j}), ((*CWL)[0][i]).end());
 }
 
 void take_out(size_t i, size_t j, size_t k, vector< vector< vector< vector<size_t> > > > *CWL) {
-    ((*CWL)[i][1]).erase(remove(((*CWL)[i][1]).begin(), ((*CWL)[i][1]).end(), vector<size_t>{j, k}), ((*CWL)[i][1]).end());
+    ((*CWL)[1][i]).erase(remove(((*CWL)[1][i]).begin(), ((*CWL)[1][i]).end(), vector<size_t>{j, k}), ((*CWL)[1][i]).end());
 }
 
 void add_cwl(size_t i, size_t j, vector< vector< vector< vector<size_t> > > > *CWL) {
@@ -330,4 +335,12 @@ void add_rvl(size_t i, size_t j, vector< vector< vector<size_t> > > *reverse_lan
 void add_rvl(size_t i, size_t j, size_t k, vector< vector< vector<size_t> > > *reverse_landmarks) {
     if (find(((*reverse_landmarks)[2]).begin(), ((*reverse_landmarks)[2]).end(), vector<size_t>{i, j, k}) == ((*reverse_landmarks)[2]).end())
         ((*reverse_landmarks)[2]).push_back({i, j, k});
+}
+
+inline size_t _min(size_t a, size_t b) {
+    return a < b ? a : b;
+}
+
+inline size_t _max(size_t a, size_t b) {
+    return a < b ? b : a;
 }
