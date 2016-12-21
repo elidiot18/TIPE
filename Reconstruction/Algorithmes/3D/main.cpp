@@ -145,8 +145,8 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
         }
         else if (i == 2) {
             add_cwl(L[0], p, &CWL);
-            add_cwl(min(L[1], p), max(L[1], p), &CWL);
-            add_cwl(L[0], min(L[1], p), max(L[1], p), &CWL);
+            add_cwl(L[1], p, &CWL);
+            add_cwl(L[0], L[1], p, &CWL);
             ++faces;
         }
         else {
@@ -201,8 +201,8 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
             //ofile << "length : " << q << endl;
             for (size_t k = 0; k < q; ++k) {
                 size_t p1 = reverse_landmarks[k];
-                if (p1 != p && is_witnessed(p1, p, W, neighbours)) {
-                    //ofile << "hello edge" << endl;
+                if (!in(p1, p, CWL) && is_witnessed(p1, p, W, neighbours)) {
+                    //ofile << "hello edge" << p1 << " " << p  << " : " << L_inv[p1] << " " << L_inv[p] << endl;
                     add_cwl(p1, p, &CWL);
                 }
 
@@ -211,7 +211,7 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
                     if (in(p1, p2, CWL)) {
                         if (!is_witnessed(p1, p2, W, neighbours)) {
                             take_out(p1, p2, &CWL);
-                            //ofile << "bye bye edge" << endl;
+                            //ofile << "bye bye edge" << p1 << " " << p2  << " : " << L_inv[p1] << " " << L_inv[p2] << endl;
                         }
                     }
 
@@ -223,7 +223,7 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
                             //ofile << "bye bye triangle" << endl;
                         }
                     }
-                    if (p1 != p2 && p1 != p && p2 != p && is_witnessed(p1, p2, p, W, neighbours)) {
+                    if (p1 != p2 && p1 != p && p2 != p && !in(p1, p2, p, CWL) && is_witnessed(p1, p2, p, W, neighbours)) {
                             //ofile << "hello triangle" << endl;
                             ++faces;
                             add_cwl(p1, p2, p, &CWL);
@@ -234,7 +234,7 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
 
         //cout << "Reconstruction n. " << i << " : " << endl;
 
-        if (i == 5) {
+        if (i == 500) {
             ofile << "Reconstruction n. " << i << " : " << endl;
 
             /* Geomview OFF format */
@@ -252,12 +252,19 @@ void reconstruction(vector< vector<double> > &W, ofstream &ofile) {
 
             // Syntax : n i j k ... for each face of n vertices which indexes are i j k...
             for (size_t k = 0; k < n; ++k) {
+                size_t s = CWL[0][k].size();
+                for (size_t l = 0; l < s; ++l) {
+                    ofile << 2 << " " << L_inv[k] << " " << L_inv[CWL[0][k][l][0]] << endl;
+                }
+            }
+            for (size_t k = 0; k < n; ++k) {
                 size_t s = CWL[1][k].size();
                 for (size_t l = 0; l < s; ++l) {
                     ofile << 3 << " " << L_inv[k]  << " " << L_inv[CWL[1][k][l][0]]  << " "  << L_inv[CWL[1][k][l][1]] << endl;
                 }
             }
             break;
+
         }
 
 
@@ -321,6 +328,9 @@ size_t farthest(vector< vector<double> > &W, vector<size_t> &L) {
 }
 
 bool is_witnessed(size_t i, size_t j, vector< vector<double> > &W, vector< vector<size_t> > &neighbours) {
+    if (i == j) {
+        return false;
+    }
     size_t n = W.size();
     for (size_t k = 0; k < n; ++k) {
         vector<size_t> neigh = neighbours[k];
@@ -332,6 +342,9 @@ bool is_witnessed(size_t i, size_t j, vector< vector<double> > &W, vector< vecto
 }
 
 bool is_witnessed(size_t i, size_t j, size_t k, vector< vector<double> > &W, vector< vector<size_t> > &neighbours) {
+    if (i == j || j == k || i == k) {
+        return false;
+    }
     size_t n = W.size();
     for (size_t k = 0; k < n; ++k) {
         vector<size_t> neigh = neighbours[k];
@@ -361,11 +374,15 @@ void take_out(size_t i, size_t j, size_t k, vector< vector< vector< vector<size_
 }
 
 void add_cwl(size_t i, size_t j, vector< vector< vector< vector<size_t> > > > *CWL) {
-    ((*CWL)[0][i]).push_back({i});
+    i < j ? ((*CWL)[0][i]).push_back({j}) : ((*CWL)[0][j]).push_back({i});
 }
 
 void add_cwl(size_t i, size_t j, size_t k, vector< vector< vector< vector<size_t> > > > *CWL) {
-    ((*CWL)[1][i]).push_back({j, k});
+    size_t ii, jj, kk;
+    ii = min(min(i, j), k);
+    kk = max(max(i, j), k);
+    jj = i + j + k - ii - kk;
+    ((*CWL)[1][ii]).push_back({jj, kk});
 }
 
 void add_rvl(size_t i, vector<size_t> *reverse_landmarks) {
