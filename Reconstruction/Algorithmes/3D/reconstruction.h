@@ -4,20 +4,21 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <set>
 #include <algorithm>
 #include "geometry.h"
 
 using namespace std;
 
-bool in(size_t, size_t, size_t, SimplicialComplex&);
-bool in(size_t, size_t, SimplicialComplex&);
-bool in(size_t, SimplicialComplex&);
-void del(size_t, size_t, size_t, SimplicialComplex*);
-void del(size_t, size_t, SimplicialComplex*);
-void del(size_t, SimplicialComplex*);
-void add(size_t, size_t, size_t, SimplicialComplex*);
-void add(size_t, size_t, SimplicialComplex*);
-void add(size_t, SimplicialComplex*);
-void del(size_t, vector<size_t>*);
+bool in(Point, Point, Point, SimplicialComplex&);
+bool in(Point, Point, SimplicialComplex&);
+bool in(Point, SimplicialComplex&);
+void del(Point, Point, Point, SimplicialComplex*);
+void del(Point, Point, SimplicialComplex*);
+void del(Point, SimplicialComplex*);
+void add(Point, Point, Point, SimplicialComplex*);
+void add(Point, Point, SimplicialComplex*);
+void add(Point, SimplicialComplex*);
+void del(Point, vector<Point>*);
 
 #endif // INCLUDE_RECONSTRUCTION
