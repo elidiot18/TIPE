@@ -6,8 +6,8 @@ string remove_extension(string &s) {
     return s.substr(0, lastdot);
 }
 
-void order(size_t *i, size_t *j, size_t *k) {
-    size_t ii, jj, kk;
+void order(Point *i, Point *j, Point *k) {
+    Point ii, jj, kk;
     ii = min(min(*i, *j), *k);
     kk = max(max(*i, *j), *k);
     jj = *i + *j + *k - ii - kk;
@@ -16,8 +16,8 @@ void order(size_t *i, size_t *j, size_t *k) {
     *k = kk;
 }
 
-void order(size_t *i, size_t *j) {
-    size_t ii, jj;
+void order(Point *i, Point *j) {
+    Point ii, jj;
     ii = min(*i, *j);
     jj = max(*i, *j);
     *i = ii;
