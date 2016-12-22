@@ -15,3 +15,11 @@ void order(size_t *i, size_t *j, size_t *k) {
     *j = jj;
     *k = kk;
 }
+
+void order(size_t *i, size_t *j) {
+    size_t ii, jj;
+    ii = min(*i, *j);
+    jj = max(*i, *j);
+    *i = ii;
+    *j = jj;
+}
