@@ -6,7 +6,7 @@
 using namespace std;
 
 string remove_extension(string&);
-void order(size_t*, size_t*, size_t*);
-void order(size_t*, size_t*);
+void order(Point*, Point*, Point*);
+void order(Point*, Point*);
 
 #endif // INCLUDE_MISCELLANEOUS
