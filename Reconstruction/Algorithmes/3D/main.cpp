@@ -36,11 +36,11 @@ int main(int argc, char **argv) {
         return 42;
     }
 
-    vector<Point> W;
+    vector<PointDouble> W;
 
     size_t i = 0;
     while (!ifile.eof()) {
-        Point w;
+        PointDouble w;
         W.push_back(w);
         double x, y, z;
         ifile >> x;
