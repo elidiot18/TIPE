@@ -1,31 +1,70 @@
 #include "geometry.h"
 
-double distance(Point p1, Point p2, vector<PointDouble> &W) {
-    return (W[p1].x - W[p2].x) * (W[p1].x - W[p2].x) + (W[p1].y - W[p2].y) * (W[p1].y - W[p2].y) + (W[p1].z - W[p2].z) * (W[p1].z - W[p2].z);
+using namespace std;
+
+double distance(const Point& p1, const Point& p2) {
+    const Coordinates& c1 = p1.coordinates;
+    const Coordinates& c2 = p2.coordinates;
+    return pow(c1.x - c2.x, 2) + pow(c1.y - c2.y, 2) + pow(c1.z - c2.z, 2);
 }
 
-double distance(Point p, vector<Point> &L, vector<PointDouble> &W) {
-    size_t l = L.size();
-    double d = distance(p, L[0], W);
-    for (size_t k = 0; k < l; ++k) {
-        double dk = distance(p, L[k], W);
-        if (dk < d) {
-            d = dk;
+double distance(const Coordinates& c1, const Coordinates& c2) {
+    return pow(c1.x - c2.x, 2) + pow(c1.y - c2.y, 2) + pow(c1.z - c2.z, 2);
+}
+
+double distance(const Point& p, const vector<Point*>& L) {
+    double d = numeric_limits<double>::max();
+    for (Point* l : L) {
+        double dl = distance(p, *l);
+        if (dl < d) {
+            d = dl;
         }
     }
     return d;
 }
 
-size_t farthest(vector<PointDouble> &W, vector<Point> &L) {
-    size_t n = W.size();
-    size_t m = 0;
-    double dm = distance(m, L, W);
-    for (size_t j = 1; j < n; ++j) {
-        double dj = distance(j, L, W);
-        if (dm < dj) {
-            dm = dj;
-            m = j;
+Point farthest(const vector<Point>& W, const vector<Point*>& L) {
+    const Point* out;
+    double dm(0);
+    for (const Point& p : W) {
+        double d = distance(p, L);
+        if (d > dm) {
+            dm = d;
+            out = &p;
         }
     }
-    return m;
+    return *out;
+}
+
+Triangle::Triangle(Point const * i, Point const * j, Point const * k) {
+    if (i < j) {
+        if (i < k) {
+            if (j < k) {
+                p1 = i; p2 = j; p3 = k;
+            }
+            else {
+                p1 = i; p2 = k; p3 = j;
+            }
+        }
+        else {
+            p1 = k; p2 = i; p3 = j;
+        }
+    }
+    else {
+        if (j < k) {
+            if (i < k) {
+                p1 = j; p2 = i; p3 = k;
+            }
+            else {
+                p1 = j; p2 = k; p3 = i;
+            }
+        }
+        else {
+            p1 = k; p2 = j; p3 = i;
+        }
+    }
+}
+
+Edge::Edge(Point const * i, Point const * j) {
+    i < j ? (p1 = i, p2 = j) : (p1 = j, p2 = i);
 }
