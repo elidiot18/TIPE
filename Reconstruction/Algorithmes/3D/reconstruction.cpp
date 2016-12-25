@@ -3,23 +3,35 @@
 
 using namespace std;
 
-void reconstruction(vector<PointDouble> &W, ofstream &ofile) {
+void reconstruction(vector<Point>& W, ofstream& ofile) {
+    /***************
+     * nu sequence *
+     ***************/
+
+    size_t nu_0 = 1, nu_1 = 2, nu_2 = 3;
+
+    /** reconstruction **/
+
     size_t n = W.size();
 
     /* These vectors are going to be updated at each iteration */
 
     // The set of landmarks
     // L[i] = j ==> L_inv[j] = i
-    vector<Point> L;
+    vector<Point*> L;
     vector<size_t> L_inv(n, 0);
-    L.push_back(0);
+    L.push_back(&W[0]);
 
-    // List of the 3 nearest neighbours in L of each point of W
-    vector<Neighbourhood> neighbours(n, {0, 0, 0});
+    for (Point w : W) {
+        w.neighbourhood.insert(L[0]);
+    }
 
     // List of the reverse-landmarks of each point of L
     // reverse_landmarks[p] contains the points w in W such as p is in neighbours[w]
-    vector< vector<Point> > reverse_landmarks(n, {0});
+    vector< vector<Point*> > reverse_landmarks(n, {L[0]});
+
+
+    /* This vector is going to be built for the displaying */
 
     // The simplicial complex (actually, only the 3-faces)
     // CWL[w] contains a list of vectors [i, j] iff w < i && w < j && [w, i, j] is a triangle of the reconstruction
@@ -34,260 +46,208 @@ void reconstruction(vector<PointDouble> &W, ofstream &ofile) {
         cout << i << endl;
 
         // We add to L the point of W\L which is the farthest from L
-        Point p = farthest(W, L);
-        L.push_back(p);
-        L_inv[p] = i;
+        Point&& p = farthest(W, L);
+        L.push_back(&p);
+        L_inv[p.index] = i;
 
-        // Will contain a list of neighbourhoods which witnesses have changed because of p
-        set<Neighbourhood, Neighbourhood_less> maybe_to_be_removed;
+        /* update of the neighbourhoods and reverse_landmarks */
+        for (Point w : W) {
+            if (i <= nu_2 - 1) {
+                // if i <= max(\nu_i) - 1 we know how to update reverse_landmarks
+                reverse_landmarks[p.index].push_back(&w);
 
-        /** update of neighbours and reverse_landmarks **/
-        for (Point k = 0; k < n; ++k) {
-            // If i <= 2 we know how to update reverse_landmarks
-            if (i == 1 || i == 2) {
-                reverse_landmarks[p].push_back(k);
+                auto& points = w.neighbourhood;
+                for (const auto& point : points) {
+                    const Edge& e = Edge(point, &p);
+                    w.simplices->edges.insert(e);
+                }
+
+                for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
+                    for (auto p2 = next(p1); p2 != points.end(); ++p2) {
+                        const Triangle& t = Triangle(*p1, *p2, &p);
+                        w.simplices->triangles.insert(t);
+                    }
+                }
             }
-            // If i is too small, nu is going to be greater than |L| (which is a problem)
-            if (i == 1) {
-                neighbours[k].p2 = p;
-                continue;
-            }
+            else {
+                auto& points = w.neighbourhood;
 
-            double d1 = distance(k, neighbours[k].p1, W);
-            double d2 = distance(k, neighbours[k].p2, W);
-            double d3 = distance(k, neighbours[k].p3, W);
+                // odd is w's neighbour which is the furthest from w
+                auto odd = points.rbegin();
 
-            double dp = distance(k, p, W);
+                if (distance(w, **odd) > distance(w, p)) {
+                    // as we remove odd, all triangles containing odd aren't witnessed by w any longer
+                    for (const Triangle& t : w.simplices->triangles) {
+                        if (t.p1->index == (*odd)->index || t.p2->index == (*odd)->index || t.p3->index == (*odd)->index) {
+                            w.simplices->triangles.erase(t);
+                        }
+                    }
 
-            if (i == 2) {
-                // We want the neighbours to be order by distance from k
-                if (d2 < dp) {
-                    neighbours[k].p3 = p;
+                    // same for the edges
+                    for (const Edge& e : w.simplices->edges) {
+                        if (e.p1->index == (*odd)->index || e.p2->index == (*odd)->index) {
+                            w.simplices->edges.erase(e);
+                        }
+                    }
+
+                    // w is not a reverse landmark of odd any longer
+                    del(&w, &(reverse_landmarks[(*odd)->index]));
+                    // but now, w is a reverse landmark of p
+                    reverse_landmarks[p.index].push_back(&w);
+
+                    points.erase(*odd);
+
+                    // we insert the new neighbour and get its position in p_it
+                    auto p_it = w.neighbourhood.insert(&p);
+
+                    for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
+                        for (auto p2 = next(p1); p2 != points.end(); ++p2) {
+                            if (p1 != p_it && p2 != p_it) {
+                                const Triangle& t = Triangle(*p1, *p2, &p);
+                                w.simplices->triangles.insert(t);
+                            }
+                        }
+                    }
+
+                    // nu_1 is the number of neighbours to consider for an edge
+                    auto edge_max = next(w.neighbourhood.begin(), nu_1);
+                    if (distance(**p_it, w) < distance(**edge_max, w)) {
+                        for (auto point = points.begin(); point != edge_max; ++point) {
+                            if (point != p_it) {
+                                const Edge& e = Edge(*point, &p);
+                                w.simplices->edges.insert(e);
+                            }
+                        }
+                    }
                 }
                 else {
-                    Point t = neighbours[k].p2;
-                    neighbours[k].p2 = p;
-                    neighbours[k].p3 = t;
-                }
-                continue;
-            }
-
-            // i isn't a problem any longer
-
-            // if d(k, p) < d(k, neighbours of k) then we have to update the neighbours
-            if (d3 > dp) {
-                maybe_to_be_removed.insert(neighbours[k]);
-
-                del(k, &(reverse_landmarks[neighbours[k].p3]));
-                neighbours[k].p3 = p;
-                reverse_landmarks[p].push_back(k);
-
-                // We want the neighbours to be order by distance from k
-                if (d2 > dp) {
-                    Point t = neighbours[k].p2;
-                    neighbours[k].p2 = neighbours[k].p3;
-                    neighbours[k].p3 = t;
-                }
-                if (d1 > dp) {
-                    Point t = neighbours[k].p1;
-                    neighbours[k].p1 = neighbours[k].p2;
-                    neighbours[k].p2 = t;
+                    // w is not affect by p
                 }
             }
         }
 
-/*      for (size_t k = 0; k < n; ++k) {
-            size_t neigh1 = neighbours[k][0];
-            size_t neigh2 = neighbours[k][1];
-            size_t neigh3 = neighbours[k][2];
-
-            reverse_landmarks[neigh1].push_back(k);
-            reverse_landmarks[neigh2].push_back(k);
-            reverse_landmarks[neigh3].push_back(k);
-        }
-*/
         if (i == 1) {
             // no triangle to add !
         }
-        /*else if (i == 2) {
-            add(L[0], L[1], p, &CWL);
-            ++faces;
-        }*/
         else {
-            vector<Point> p_reverse_landmarks = reverse_landmarks[p];
-            size_t l = p_reverse_landmarks.size();
-            for (Point k = 0; k < l; ++k) {
-                maybe_to_be_removed.insert(neighbours[p_reverse_landmarks[k]]);
-            }
+            vector<Point*>& p_reverse_landmarks = reverse_landmarks[p.index];
+            for (const auto& w : p_reverse_landmarks) {
+                for (Triangle t : w->simplices->triangles) {
+                    //we want to know if we have to add the triangle [p1, p2, p3]
+                    const Point& p1 = *t.p1;
+                    const Point& p2 = *t.p2;
+                    const Point& p3 = *t.p3;
 
-            for (set<Neighbourhood>::iterator it = maybe_to_be_removed.begin(); it != maybe_to_be_removed.end(); ++it) {
-                Point p1 = it->p1;
-                Point p2 = it->p2;
-                Point p3 = it->p3;
+                    vector<Point*> p1_potential_witnesses = reverse_landmarks[p1.index];
+                    vector<Point*> p2_potential_witnesses = reverse_landmarks[p2.index];
+                    vector<Point*> p3_potential_witnesses = reverse_landmarks[p3.index];
 
-                bool p1_witnessed = false;
+                    Edge e1 = Edge(&p1, &p2);
+                    Edge e2 = Edge(&p1, &p3);
+                    Edge e3 = Edge(&p2, &p3);
 
-                vector<Point> p1_potential_witnesses = reverse_landmarks[p1];
-                size_t l_p1 = p1_potential_witnesses.size();
-                for (size_t q = 0; q < l_p1; ++q) {
-                    if (neighbours[p1_potential_witnesses[q]].p1 == p1) {
-                        p1_witnessed = true;
-                        break;
-                    }
-                }
+                    // checking if the edge e1 is witnessed
+                    bool e1_witnessed = false;
 
-                bool p2_witnessed = false;
-
-                vector<Point> p2_potential_witnesses = reverse_landmarks[p2];
-                size_t l_p2 = p2_potential_witnesses.size();
-                for (size_t q = 0; q < l_p2; ++q) {
-                    if (neighbours[p2_potential_witnesses[q]].p1 == p2) {
-                        p2_witnessed = true;
-                        break;
-                    }
-                }
-
-                bool p3_witnessed = false;
-
-                vector<Point> p3_potential_witnesses = reverse_landmarks[p3];
-                size_t l_p3 = p3_potential_witnesses.size();
-                for (size_t q = 0; q < l_p3; ++q) {
-                    if (neighbours[p3_potential_witnesses[q]].p1 == p3) {
-                        p3_witnessed = true;
-                        break;
-                    }
-                }
-
-                if (p1_witnessed && !in(p1, CWL)) {
-                    add(p1, &CWL);
-                    ++faces;
-                }
-                else if (!p1_witnessed && in(p1, CWL)) {
-                    del(p1, &CWL);
-                    --faces;
-                }
-
-                if (p2_witnessed && !in(p2, CWL)) {
-                    add(p2, &CWL);
-                    ++faces;
-                }
-                else if (!p2_witnessed && in(p2, CWL)) {
-                    del(p2, &CWL);
-                    --faces;
-                }
-
-                if (p3_witnessed && !in(p3, CWL)) {
-                    add(p3, &CWL);
-                    ++faces;
-                }
-                else if (!p3_witnessed && in(p3, CWL)) {
-                    del(p3, &CWL);
-                    --faces;
-                }
-
-                // checking if the edge p1 -- p2 is witnessed
-                bool p1__p2_witnessed = false;
-                for (size_t q = 0; q < l_p1; ++q) {
-                    if (neighbours[p1_potential_witnesses[q]].p1 == p1 && neighbours[p1_potential_witnesses[q]].p2 == p2 ||
-                        neighbours[p1_potential_witnesses[q]].p1 == p2 && neighbours[p1_potential_witnesses[q]].p2 == p1) {
-                        p1__p2_witnessed = true;
-                        break;
-                    }
-                }
-                if (!p1__p2_witnessed) {
-                    for (size_t q = 0; q < l_p2; ++q) {
-                        if (neighbours[p2_potential_witnesses[q]].p1 == p1 && neighbours[p2_potential_witnesses[q]].p2 == p2 ||
-                            neighbours[p2_potential_witnesses[q]].p1 == p2 && neighbours[p2_potential_witnesses[q]].p2 == p1) {
-                            p1__p2_witnessed = true;
+                    for (const auto rev_land : p1_potential_witnesses) {
+                        if (rev_land->simplices->edges.find(e1) != rev_land->simplices->edges.end()) {
+                            e1_witnessed = true;
                             break;
                         }
                     }
-                }
-                p1__p2_witnessed = p1__p2_witnessed && p1_witnessed && p2_witnessed;
-
-                // checking if the edge p1 -- p3 is witnessed
-                bool p1__p3_witnessed = false;
-                for (size_t q = 0; q < l_p1; ++q) {
-                    if (neighbours[p1_potential_witnesses[q]].p1 == p1 && neighbours[p1_potential_witnesses[q]].p2 == p3 ||
-                        neighbours[p1_potential_witnesses[q]].p1 == p3 && neighbours[p1_potential_witnesses[q]].p2 == p1) {
-                        p1__p3_witnessed = true;
-                        break;
+                    if (!e1_witnessed) {
+                        for (const auto rev_land : p2_potential_witnesses) {
+                            if (rev_land->simplices->edges.find(e1) != rev_land->simplices->edges.end()) {
+                                e1_witnessed = true;
+                                break;
+                            }
+                        }
                     }
-                }
-                if (!p1__p3_witnessed) {
-                    for (size_t q = 0; q < l_p3; ++q) {
-                        if (neighbours[p3_potential_witnesses[q]].p1 == p1 && neighbours[p3_potential_witnesses[q]].p2 == p3 ||
-                            neighbours[p3_potential_witnesses[q]].p1 == p3 && neighbours[p3_potential_witnesses[q]].p2 == p1) {
-                            p1__p3_witnessed = true;
+
+                    // checking if the edge e2 is witnessed
+                    bool e2_witnessed = false;
+
+                    for (const auto rev_land : p1_potential_witnesses) {
+                        if (rev_land->simplices->edges.find(e2) != rev_land->simplices->edges.end()) {
+                            e2_witnessed = true;
                             break;
                         }
                     }
-                }
-                p1__p3_witnessed = p1__p3_witnessed && p1_witnessed && p3_witnessed;
-
-                // checking if the edge p2 -- p3 is witnessed
-                bool p2__p3_witnessed = false;
-                for (size_t q = 0; q < l_p2; ++q) {
-                    if (neighbours[p2_potential_witnesses[q]].p1 == p2 && neighbours[p2_potential_witnesses[q]].p2 == p3 ||
-                        neighbours[p2_potential_witnesses[q]].p1 == p3 && neighbours[p2_potential_witnesses[q]].p2 == p2) {
-                        p2__p3_witnessed = true;
-                        break;
+                    if (!e2_witnessed) {
+                        for (const auto rev_land : p3_potential_witnesses) {
+                            if (rev_land->simplices->edges.find(e2) != rev_land->simplices->edges.end()) {
+                                e2_witnessed = true;
+                                break;
+                            }
+                        }
                     }
-                }
-                if (!p2__p3_witnessed) {
-                    for (size_t q = 0; q < l_p3; ++q) {
-                        if (neighbours[p3_potential_witnesses[q]].p1 == p2 && neighbours[p3_potential_witnesses[q]].p2 == p3 ||
-                            neighbours[p3_potential_witnesses[q]].p1 == p3 && neighbours[p3_potential_witnesses[q]].p2 == p2) {
-                            p2__p3_witnessed = true;
+
+                    // checking if the edge e3 is witnessed
+                    bool e3_witnessed = false;
+
+                    for (const auto rev_land : p2_potential_witnesses) {
+                        if (rev_land->simplices->edges.find(e3) != rev_land->simplices->edges.end()) {
+                            e3_witnessed = true;
                             break;
                         }
                     }
-                }
-                p2__p3_witnessed = p2__p3_witnessed && p2_witnessed && p3_witnessed;
-
-                if (p1__p2_witnessed && !in(p1, p2, CWL)) {
-                    add(p1, p2, &CWL);
-                    ++faces;
-                }
-                else if (!p1__p2_witnessed && in(p1, p2, CWL)) {
-                    del(p1, p2, &CWL);
-                    --faces;
-                }
-
-                if (p1__p3_witnessed && !in(p1, p3, CWL)) {
-                    add(p1, p3, &CWL);
-                    ++faces;
-                }
-                else if (!p1__p3_witnessed && in(p1, p3, CWL)) {
-                    del(p1, p3, &CWL);
-                    --faces;
-                }
-
-                if (p2__p3_witnessed && !in(p2, p3, CWL)) {
-                    add(p2, p3, &CWL);
-                    ++faces;
-                }
-                else if (!p2__p3_witnessed && in(p2, p3, CWL)) {
-                    del(p2, p3, &CWL);
-                    --faces;
-                }
-
-                // if every edge is witnessed then the triangle is witnessed (it is itself witnessed by definition)
-                if (p1__p2_witnessed && p1__p3_witnessed && p2__p3_witnessed) {
-                    if (!in(p1, p2, p3, CWL)) {
-                        add(p1, p2, p3, &CWL);
-                        ++faces;
+                    if (!e3_witnessed) {
+                        for (const auto rev_land : p3_potential_witnesses) {
+                            if (rev_land->simplices->edges.find(e3) != rev_land->simplices->edges.end()) {
+                                e3_witnessed = true;
+                                break;
+                            }
+                        }
                     }
-                }
-                else if (in(p1, p2, p3, CWL)) {
-                    del(p1, p2, p3, &CWL);
-                    --faces;
+
+                    if (e1_witnessed) {
+                        if (w->simplices->edges.insert(e1).second)
+                            ++faces;
+                    }
+                    else {
+                        if (!w->simplices->edges.erase(e1))
+                           --faces;
+                    }
+
+
+                    if (e2_witnessed) {
+                        if (w->simplices->edges.insert(e2).second)
+                            ++faces;
+                    }
+                    else {
+                        if (!w->simplices->edges.erase(e2))
+                           --faces;
+                    }
+
+                    if (e3_witnessed) {
+                        if (w->simplices->edges.insert(e3).second)
+                            ++faces;
+                    }
+                    else {
+                        if (!w->simplices->edges.erase(e3))
+                           --faces;
+                    }
+
+                    // if every edge is witnessed then the triangle is witnessed (it is itself witnessed by definition)
+                    // for the moment, t is in w.simplices
+                    // do we have to remove it ?
+                    if (!(e1_witnessed && e2_witnessed && e3_witnessed)) {
+                        w->simplices->triangles.erase(t);
+                    }
                 }
             }
         }
+
         // We only want the reconstruction for i = 500 (then we stop)
         if (i == 500) {
-            ofile << "Reconstruction n. " << i << " : " << endl;
+            for (Point w : W) {
+                for (Edge e : w.simplices->edges) {
+                    CWL.edges.insert(e);
+                }
+                for (Triangle t : w.simplices->triangles) {
+                    CWL.triangles.insert(t);
+                }
+            }
 
             //Geomview OFF format
             // Syntax : "OFF"
@@ -297,24 +257,24 @@ void reconstruction(vector<PointDouble> &W, ofstream &ofile) {
             ofile << i + 1 << " " << faces << " " << 42 << endl;
 
             // Syntax : x y z for each vertex
-            for (Point k = 0; k < i + 1; ++k) {
-                ofile << W[L[k]].x << " " << W[L[k]].y << " " << W[L[k]].z << endl;
+            for (Point* p : L) {
+                ofile << p->coordinates.x << " " << p->coordinates.y << " " << p->coordinates.z << endl;
             }
 
             // Syntax : n i j k ... for each n-face which indexes are i j k...
             // points
-            for (set<Point>::iterator it = CWL.points.begin(); it != CWL.points.end(); ++it) {
-                ofile << 1 << " " << L_inv[*it] << " 255 0 0" << endl;
+            for (Point* p : L) {
+                ofile << 1 << " " << p->index << " 255 0 0" << endl;
             }
 
             // edges
-            for (set<Edge>::iterator it = CWL.edges.begin(); it != CWL.edges.end(); ++it) {
-                ofile << 2 << " " << L_inv[it->p1] << " " << L_inv[it->p2] << " 0 0 0" << endl;
+            for (const Edge& e : CWL.edges) {
+                ofile << 2 << " " << L_inv[e.p1->index] << " " << L_inv[e.p2->index] << " 0 0 0" << endl;
             }
 
             // faces
-            for (set<Triangle>::iterator it = CWL.triangles.begin(); it != CWL.triangles.end(); ++it) {
-                ofile << 3 << " " << L_inv[it->p1]  << " " << L_inv[it->p2]  << " " << L_inv[it->p3] << endl;
+            for (const Triangle& t : CWL.triangles) {
+                ofile << 3 << " " << L_inv[t.p1->index]  << " " << L_inv[t.p2->index]  << " " << L_inv[t.p3->index] << endl;
             }
 
             // We stop
@@ -324,54 +284,6 @@ void reconstruction(vector<PointDouble> &W, ofstream &ofile) {
     }
 }
 
-bool in(Point i, Point j, Point k, SimplicialComplex &CWL) {
-    order(&i, &j, &k);
-    Triangle t = {i, j, k};
-    return CWL.triangles.find(t) != CWL.triangles.end();
-}
-
-bool in(Point i, Point j, SimplicialComplex &CWL) {
-    order(&i, &j);
-    Edge e = {i, j};
-    return CWL.edges.find(e) != CWL.edges.end();
-}
-
-bool in(Point i, SimplicialComplex &CWL) {
-    return CWL.points.find(i) != CWL.points.end();
-}
-
-void del(Point i, Point j, Point k, SimplicialComplex *CWL) {
-    order(&i, &j, &k);
-    Triangle t = {i, j, k};
-    CWL->triangles.erase(t);
-}
-
-void del(Point i, Point j, SimplicialComplex *CWL) {
-    order(&i, &j);
-    Edge e = {i, j};
-    CWL->edges.erase(e);
-}
-
-void del(Point i, SimplicialComplex *CWL) {
-    CWL->points.erase(i);
-}
-
-void add(Point i, Point j, Point k, SimplicialComplex *CWL) {
-    order(&i, &j, &k);
-    Triangle t = {i, j, k};
-    CWL->triangles.insert(t);
-}
-
-void add(Point i, Point j, SimplicialComplex *CWL) {
-    order(&i, &j);
-    Edge e = {i, j};
-    CWL->edges.insert(e);
-}
-
-void add(Point i, SimplicialComplex *CWL) {
-    CWL->points.insert(i);
-}
-
-void del(Point w, vector<Point> *subset) {
+void del(Point* w, vector<Point*> *subset) {
     subset->erase(remove(subset->begin(), subset->end(), w), subset->end());
 }
