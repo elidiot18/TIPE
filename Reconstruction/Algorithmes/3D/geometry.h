@@ -3,61 +3,78 @@
 
 #include <vector>
 #include <set>
+#include <limits>
+#include <cmath>
 
-using namespace std;
+struct Coordinates;
+struct Point;
+struct Edge;
+struct Triangle;
 
-typedef struct {
+double distance(const Coordinates&, const Coordinates&);
+double distance(const Point&, const Point&);
+double distance(const Point&, const std::vector<Point*>&);
+Point farthest(const std::vector<Point>&, const std::vector<Point*>&);
+Edge get_edge(const Point&, const Point&);
+Triangle get_triangle(const Point&, const Point&, const Point&);
+
+struct Coordinates {
     double x;
     double y;
     double z;
-} PointDouble;
+};
 
-typedef size_t Point;
+struct SimplicialComplex;
 
-typedef struct {
-    Point p1;
-    Point p2;
-} Edge;
+struct Point {
+    static Coordinates coordinates;
+    size_t index;
 
-typedef struct {
-    Point p1;
-    Point p2;
-    Point p3;
-} Triangle;
+    struct Compare {
+        bool operator()(Point* lhs, Point* rhs) {
+            return distance(lhs->coordinates, Point::coordinates) < distance(rhs->coordinates, Point::coordinates);
+        }
+    };
+
+    bool operator<(const Point& rhs) const {return this->index < rhs.index;}
+    bool operator==(const Point& rhs) const {return this->index == rhs.index;}
+
+    bool operator<(Point* rhs) const {return this->index < rhs->index;}
+    bool operator==(Point* rhs) const {return this->index == rhs->index;}
+
+    std::multiset<Point*, Compare> neighbourhood;
+
+    SimplicialComplex* simplices;
+};
+
+struct Edge {
+    Edge(Point const *, Point const *);
+    Point const * p1;
+    Point const * p2;
+};
+
+struct Triangle {
+    Triangle(Point const *, Point const *, Point const *);
+    Point const * p1;
+    Point const * p2;
+    Point const * p3;
+};
 
 struct Edge_less {
-    operator()(Edge e1, Edge e2) {
+    bool operator()(const Edge& e1, const Edge& e2) {
         return e1.p1 < e2.p1 || (e1.p1 == e2.p1 && e1.p2 < e2.p2);
     }
 };
 
 struct Triangle_less {
-    operator()(Triangle t1, Triangle t2) {
+    bool operator()(Triangle t1, Triangle t2) {
         return t1.p1 < t2.p1 || (t1.p1 == t2.p1 && t1.p2 < t2.p2) || (t1.p1 == t2.p1 && t1.p2 == t2.p2 && t1.p3 < t2.p3);
     }
 };
 
-typedef struct {
-    set<Point> points;
-    set<Edge, Edge_less> edges;
-    set<Triangle, Triangle_less> triangles;
-} SimplicialComplex;
-
-typedef struct {
-    Point p1;
-    Point p2;
-    Point p3;
-} Neighbourhood;
-
-struct Neighbourhood_less {
-    operator()(Neighbourhood n1, Neighbourhood n2) {
-        return n1.p1 < n2.p1 || (n1.p1 == n2.p1 && n1.p2 < n2.p2) || (n1.p1 == n2.p1 && n1.p2 == n2.p2 && n1.p3 < n2.p3);
-    }
+struct SimplicialComplex {
+    std::set<Edge, Edge_less> edges;
+    std::set<Triangle, Triangle_less> triangles;
 };
-
-void init_cwl(SimplicialComplex*, size_t);
-double distance(Point, Point, vector<PointDouble>&);
-double distance(Point, vector<size_t>&, vector<PointDouble>&);
-Point farthest(vector<PointDouble>&, vector<Point>&);
 
 #endif // INCLUDE_GEOMETRY
