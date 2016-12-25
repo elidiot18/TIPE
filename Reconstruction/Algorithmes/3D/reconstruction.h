@@ -1,6 +1,7 @@
 #ifndef INCLUDE_RECONSTRUCTION
 #define INCLUDE_RECONSTRUCTION
 
+#include <climits>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -8,17 +9,9 @@
 #include <algorithm>
 #include "geometry.h"
 
-using namespace std;
+#define POINT_UNDEF UINT_MAX
 
-bool in(Point, Point, Point, SimplicialComplex&);
-bool in(Point, Point, SimplicialComplex&);
-bool in(Point, SimplicialComplex&);
-void del(Point, Point, Point, SimplicialComplex*);
-void del(Point, Point, SimplicialComplex*);
-void del(Point, SimplicialComplex*);
-void add(Point, Point, Point, SimplicialComplex*);
-void add(Point, Point, SimplicialComplex*);
-void add(Point, SimplicialComplex*);
-void del(Point, vector<Point>*);
+void reconstruction(std::vector<Point>&, std::ofstream&);
+void del(Point*, std::vector<Point*>*);
 
 #endif // INCLUDE_RECONSTRUCTION
