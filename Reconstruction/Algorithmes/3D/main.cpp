@@ -36,20 +36,21 @@ int main(int argc, char **argv) {
         return 42;
     }
 
-    vector<PointDouble> W;
+    vector<Point> W;
 
     size_t i = 0;
     while (!ifile.eof()) {
-        PointDouble w;
+        Point w;
         W.push_back(w);
         double x, y, z;
         ifile >> x;
         ifile >> y;
         ifile >> z;
-        W[i].x = x;
-        W[i].y = y;
-        W[i].z = z;
-        i++;
+        W[i].coordinates.x = x;
+        W[i].coordinates.y = y;
+        W[i].coordinates.z = z;
+        W[i].index = i;
+        ++i;
     }
 
     reconstruction(W, ofile);
