@@ -3,7 +3,7 @@
 
 using namespace std;
 
-void reconstruction(vector<Point>& W, ofstream& ofile) {
+void reconstruction(vector<Point*>& W, ofstream& ofile) {
     /***************
      * nu sequence *
      ***************/
@@ -20,15 +20,15 @@ void reconstruction(vector<Point>& W, ofstream& ofile) {
     // L[i] = j ==> L_inv[j] = i
     vector<Point*> L;
     vector<size_t> L_inv(n, 0);
-    L.push_back(&W[0]);
+    L.push_back(W[0]);
 
-    for (Point w : W) {
-        w.neighbourhood.insert(L[0]);
+    for (Point* w : W) {
+        w->neighbourhood.insert(pair<double, Point*>(distance(w, L[0]), L[0]));
     }
 
     // List of the reverse-landmarks of each point of L
     // reverse_landmarks[p] contains the points w in W such as p is in neighbours[w]
-    vector< vector<Point*> > reverse_landmarks(n, {L[0]});
+    vector<vector<Point*>> reverse_landmarks(n, {L[0]});
 
 
     /* This vector is going to be built for the displaying */
@@ -46,76 +46,77 @@ void reconstruction(vector<Point>& W, ofstream& ofile) {
         cout << i << endl;
 
         // We add to L the point of W\L which is the farthest from L
-        Point&& p = farthest(W, L);
-        L.push_back(&p);
-        L_inv[p.index] = i;
+        Point* p = farthest(W, L);
+        L.push_back(p);
+        L_inv[p->index] = i;
 
         /* update of the neighbourhoods and reverse_landmarks */
-        for (Point w : W) {
+        for (Point* w : W) {
             if (i <= nu_2 - 1) {
-                // if i <= max(\nu_i) - 1 we know how to update reverse_landmarks
-                reverse_landmarks[p.index].push_back(&w);
-
-                auto& points = w.neighbourhood;
+                // if i <= max(\nu_i) - 1 we know how to update reverse_landmarks and w.neighbourhood
+                reverse_landmarks[p->index].push_back(w);
+                w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
+                auto& points = w->neighbourhood;
                 for (const auto& point : points) {
-                    const Edge& e = Edge(point, &p);
-                    w.simplices->edges.insert(e);
+                    const Edge& e = Edge(point.second, p);
+                    w->simplices->edges.insert(e);
                 }
 
                 for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
                     for (auto p2 = next(p1); p2 != points.end(); ++p2) {
-                        const Triangle& t = Triangle(*p1, *p2, &p);
-                        w.simplices->triangles.insert(t);
+                        const Triangle& t = Triangle(p1->second, p2->second, p);
+                        w->simplices->triangles.insert(t);
                     }
                 }
             }
             else {
-                auto& points = w.neighbourhood;
+                auto& points = w->neighbourhood;
 
                 // odd is w's neighbour which is the furthest from w
                 auto odd = points.rbegin();
+                odd++;
 
-                if (distance(w, **odd) > distance(w, p)) {
+                if (distance(w, odd->second) > distance(w, p)) {
                     // as we remove odd, all triangles containing odd aren't witnessed by w any longer
-                    for (const Triangle& t : w.simplices->triangles) {
-                        if (t.p1->index == (*odd)->index || t.p2->index == (*odd)->index || t.p3->index == (*odd)->index) {
-                            w.simplices->triangles.erase(t);
+                    for (const Triangle& t : w->simplices->triangles) {
+                        if (t.p1->index == odd->second->index || t.p2->index == odd->second->index || t.p3->index == odd->second->index) {
+                            w->simplices->triangles.erase(t);
                         }
                     }
 
                     // same for the edges
-                    for (const Edge& e : w.simplices->edges) {
-                        if (e.p1->index == (*odd)->index || e.p2->index == (*odd)->index) {
-                            w.simplices->edges.erase(e);
+                    for (const Edge& e : w->simplices->edges) {
+                        if (e.p1->index == odd->second->index || e.p2->index == odd->second->index) {
+                            w->simplices->edges.erase(e);
                         }
                     }
 
                     // w is not a reverse landmark of odd any longer
-                    del(&w, &(reverse_landmarks[(*odd)->index]));
+                    del(w, &(reverse_landmarks[odd->second->index]));
                     // but now, w is a reverse landmark of p
-                    reverse_landmarks[p.index].push_back(&w);
+                    reverse_landmarks[p->index].push_back(w);
 
-                    points.erase(*odd);
+                    points.erase(odd.base());
 
                     // we insert the new neighbour and get its position in p_it
-                    auto p_it = w.neighbourhood.insert(&p);
+                    auto p_it = w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
 
                     for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
                         for (auto p2 = next(p1); p2 != points.end(); ++p2) {
                             if (p1 != p_it && p2 != p_it) {
-                                const Triangle& t = Triangle(*p1, *p2, &p);
-                                w.simplices->triangles.insert(t);
+                                const Triangle& t = Triangle(p1->second, p2->second, p);
+                                w->simplices->triangles.insert(t);
                             }
                         }
                     }
 
                     // nu_1 is the number of neighbours to consider for an edge
-                    auto edge_max = next(w.neighbourhood.begin(), nu_1);
-                    if (distance(**p_it, w) < distance(**edge_max, w)) {
+                    auto edge_max = next(w->neighbourhood.begin(), nu_1);
+                    if (distance(p_it->second, w) < distance(edge_max->second, w)) {
                         for (auto point = points.begin(); point != edge_max; ++point) {
                             if (point != p_it) {
-                                const Edge& e = Edge(*point, &p);
-                                w.simplices->edges.insert(e);
+                                const Edge& e = Edge(point->second, p);
+                                w->simplices->edges.insert(e);
                             }
                         }
                     }
@@ -130,21 +131,21 @@ void reconstruction(vector<Point>& W, ofstream& ofile) {
             // no triangle to add !
         }
         else {
-            vector<Point*>& p_reverse_landmarks = reverse_landmarks[p.index];
+            vector<Point*>& p_reverse_landmarks = reverse_landmarks[p->index];
             for (const auto& w : p_reverse_landmarks) {
                 for (Triangle t : w->simplices->triangles) {
                     //we want to know if we have to add the triangle [p1, p2, p3]
-                    const Point& p1 = *t.p1;
-                    const Point& p2 = *t.p2;
-                    const Point& p3 = *t.p3;
+                    Point* p1 = t.p1;
+                    Point* p2 = t.p2;
+                    Point* p3 = t.p3;
 
-                    vector<Point*> p1_potential_witnesses = reverse_landmarks[p1.index];
-                    vector<Point*> p2_potential_witnesses = reverse_landmarks[p2.index];
-                    vector<Point*> p3_potential_witnesses = reverse_landmarks[p3.index];
+                    vector<Point*> p1_potential_witnesses = reverse_landmarks[p1->index];
+                    vector<Point*> p2_potential_witnesses = reverse_landmarks[p2->index];
+                    vector<Point*> p3_potential_witnesses = reverse_landmarks[p3->index];
 
-                    Edge e1 = Edge(&p1, &p2);
-                    Edge e2 = Edge(&p1, &p3);
-                    Edge e3 = Edge(&p2, &p3);
+                    Edge e1 = Edge(p1, p2);
+                    Edge e2 = Edge(p1, p3);
+                    Edge e3 = Edge(p2, p3);
 
                     // checking if the edge e1 is witnessed
                     bool e1_witnessed = false;
@@ -240,11 +241,11 @@ void reconstruction(vector<Point>& W, ofstream& ofile) {
 
         // We only want the reconstruction for i = 500 (then we stop)
         if (i == 500) {
-            for (Point w : W) {
-                for (Edge e : w.simplices->edges) {
+            for (Point* w : W) {
+                for (Edge e : w->simplices->edges) {
                     CWL.edges.insert(e);
                 }
-                for (Triangle t : w.simplices->triangles) {
+                for (Triangle t : w->simplices->triangles) {
                     CWL.triangles.insert(t);
                 }
             }
