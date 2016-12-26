@@ -36,20 +36,16 @@ int main(int argc, char **argv) {
         return 42;
     }
 
-    vector<Point> W;
+    vector<Point*> W;
 
     size_t i = 0;
     while (!ifile.eof()) {
-        Point w;
-        W.push_back(w);
         double x, y, z;
         ifile >> x;
         ifile >> y;
         ifile >> z;
-        W[i].coordinates.x = x;
-        W[i].coordinates.y = y;
-        W[i].coordinates.z = z;
-        W[i].index = i;
+        W.push_back(new Point(i, x, y, z));
+        W[i]->simplices = make_unique<SimplicialComplex>();
         ++i;
     }
 
