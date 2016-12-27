@@ -26,7 +26,10 @@ struct Coordinates {
     double z;
 };
 
-struct SimplicialComplex;
+struct SimplicialComplex {
+    std::set<Edge> edges;
+    std::set<Triangle> triangles;
+};
 
 struct Point {
     Coordinates coordinates;
@@ -37,7 +40,12 @@ struct Point {
     Point(size_t index, double x, double y, double z) {this->index = index; coordinates.x = x; coordinates.y = y; coordinates.z =z;}
 
     std::multimap<double, Point*> neighbourhood;
-    std::unique_ptr<SimplicialComplex> simplices;
+
+    SimplicialComplex simplices;
+};
+
+bool pointer_sort(Point* lhs, Point* rhs) {
+    return lhs->index < rhs->index;
 };
 
 struct Edge {
@@ -53,11 +61,6 @@ struct Triangle {
     Point* p1;
     Point* p2;
     Point* p3;
-};
-
-struct SimplicialComplex {
-    std::set<Edge> edges;
-    std::set<Triangle> triangles;
 };
 
 #endif // INCLUDE_GEOMETRY
