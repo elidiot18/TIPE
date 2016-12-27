@@ -45,14 +45,14 @@ struct Point {
 };
 
 struct Edge {
-    Edge(Point*, Point*);
+    Edge(const Point*, const Point*);
     bool operator<(const Edge& e) const {return e.index1 < this->index1 || (e.index1 == this->index1 && e.index2 < this->index2);}
     size_t index1;
     size_t index2;
 };
 
 struct Triangle {
-    Triangle(Point*, Point*, Point*);
+    Triangle(const Point*, const Point*, const Point*);
     bool operator<(const Triangle& t) const {return t.index1 < this->index1 || (t.index1 == this->index1 && t.index2 < this->index2) || (t.index1 == this->index1 && t.index2 == this->index2 && t.index3 < this->index3);}
     size_t index1;
     size_t index2;
