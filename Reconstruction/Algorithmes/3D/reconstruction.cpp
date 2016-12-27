@@ -59,14 +59,12 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                 w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
                 auto& points = w->neighbourhood;
                 for (const auto& point : points) {
-                    Edge&& e = Edge(point.second, p);
-                    w->simplices.edges.insert(e);
+                    w->simplices.edges.emplace(Edge(point.second, p));
                 }
 
                 for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
                     for (auto p2 = next(p1); p2 != points.end(); ++p2) {
-                        Triangle&& t = Triangle(p1->second, p2->second, p);
-                        w->simplices.triangles.insert(t);
+                        w->simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
                     }
                 }
             }
@@ -76,7 +74,8 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                 // odd is w's neighbour which is the furthest from w
                 auto odd = points.rbegin().base();
 
-                if (distance(w, odd->second) > distance(w, p)) {
+                if (odd->first > distance(w, p)) {
+                    cout << "foobar" << endl;
                     // as we remove odd, all triangles containing odd aren't witnessed by w any longer
                     for (auto t = w->simplices.triangles.begin(); t != w->simplices.triangles.end(); ++t) {
                         if (t->index1 == odd->second->index || t->index2 == odd->second->index || t->index3 == odd->second->index) {
@@ -101,21 +100,25 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                     auto p_it = w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
 
                     for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
-                        for (auto p2 = next(p1); p2 != points.end(); ++p2) {
-                            if (p1 != p_it && p2 != p_it) {
-                                const Triangle& t = Triangle(p1->second, p2->second, p);
-                                w->simplices.triangles.insert(t);
+                        cout << "hello1" << endl;
+                        if (p1 != p_it) {
+                            for (auto p2 = next(p1); p2 != points.end(); ++p2) {
+                                cout << "hello2" << endl;
+                                if (p2 != p_it) {
+                                    w->simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
+                                    cout << "yo" << endl;
+                                }
                             }
                         }
                     }
 
                     // nu_1 is the number of neighbours to consider for an edge
                     auto edge_max = next(w->neighbourhood.begin(), nu_1);
-                    if (distance(p_it->second, w) < distance(edge_max->second, w)) {
+
+                    if (p_it->first < edge_max->first) {
                         for (auto point = points.begin(); point != edge_max; ++point) {
                             if (point != p_it) {
-                                const Edge& e = Edge(point->second, p);
-                                w->simplices.edges.insert(e);
+                                w->simplices.edges.emplace(Edge(point->second, p));
                             }
                         }
                     }
@@ -131,7 +134,7 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
         }
         else {
             vector<Point*>& p_reverse_landmarks = reverse_landmarks[p->index];
-            for (const auto& w : p_reverse_landmarks) {
+            for (Point* w : p_reverse_landmarks) {
                 for (Triangle t : w->simplices.triangles) {
                     //we want to know if we have to add the triangle [p1, p2, p3]
                     Point* p1 = W[t.index1];
@@ -239,7 +242,7 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
         }
 
         // We only want the reconstruction for i = 500 (then we stop)
-        if (i == 500) {
+        if (i == 100) {
             for (Point* w : W) {
                 for (Edge e : w->simplices.edges) {
                     CWL.edges.insert(e);
