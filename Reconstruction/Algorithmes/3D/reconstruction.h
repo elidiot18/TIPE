@@ -11,7 +11,7 @@
 
 #define POINT_UNDEF UINT_MAX
 
-void reconstruction(std::vector<Point>&, std::ofstream&);
+void reconstruction(std::vector<Point*>&, std::ofstream&);
 void del(Point*, std::vector<Point*>*);
 
 #endif // INCLUDE_RECONSTRUCTION
