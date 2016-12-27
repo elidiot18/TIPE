@@ -32,7 +32,7 @@ Point* farthest(const vector<Point*>& W, const vector<Point*>& L) {
     return out;
 }
 
-Triangle::Triangle(Point* i, Point* j, Point* k) {
+Triangle::Triangle(const Point* i, const Point* j, const Point* k) {
     vector<size_t> vec = {i->index, j->index, k->index};
     sort(vec.begin(), vec.end());
     this->index1 = vec[0];
@@ -40,6 +40,14 @@ Triangle::Triangle(Point* i, Point* j, Point* k) {
     this->index3 = vec[2];
 }
 
-Edge::Edge(Point* i, Point* j) {
-    *i < *j ? (this->index1 = i->index, this->index2 = j->index) : (this->index1 = j->index, this->index2 = i->index);
+Edge::Edge(const Point* i, const Point* j) {
+    size_t iindex = i->index, jindex = j->index;
+    if (iindex < jindex) {
+        this->index1 = iindex;
+        this->index2 = jindex;
+    }
+    else {
+        this->index1 = jindex;
+        this->index2 = iindex;
+    }
 }
