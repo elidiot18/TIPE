@@ -44,23 +44,19 @@ struct Point {
     SimplicialComplex simplices;
 };
 
-bool pointer_sort(Point* lhs, Point* rhs) {
-    return lhs->index < rhs->index;
-};
-
 struct Edge {
     Edge(Point*, Point*);
-    bool operator<(const Edge& e) const {return *e.p1 < *this->p1 || (*e.p1 == *this->p1 && *e.p2 < *this->p2);}
-    Point* p1;
-    Point* p2;
+    bool operator<(const Edge& e) const {return e.index1 < this->index1 || (e.index1 == this->index1 && e.index2 < this->index2);}
+    size_t index1;
+    size_t index2;
 };
 
 struct Triangle {
     Triangle(Point*, Point*, Point*);
-    bool operator<(const Triangle& t) const {return *t.p1 < *this->p1 || (*t.p1 == *this->p1 && *t.p2 < *this->p2) || (*t.p1 == *this->p1 && *t.p2 == *this->p2 && *t.p3 < *this->p3);}
-    Point* p1;
-    Point* p2;
-    Point* p3;
+    bool operator<(const Triangle& t) const {return t.index1 < this->index1 || (t.index1 == this->index1 && t.index2 < this->index2) || (t.index1 == this->index1 && t.index2 == this->index2 && t.index3 < this->index3);}
+    size_t index1;
+    size_t index2;
+    size_t index3;
 };
 
 #endif // INCLUDE_GEOMETRY
