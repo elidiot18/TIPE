@@ -40,22 +40,6 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
     /* Counts the number of faces of CWL */
     size_t faces = 0;
 
-
-
-
-
-
-    for (auto w : W) {
-        ofile << w << endl;
-        //ofile << w->coordinates.x << " " << w->coordinates.y << "" << w->coordinates.z << endl;
-    }
-
-
-
-
-
-
-
     /* Let's begin */
     size_t i = 1;
     while (i < n) {
@@ -68,19 +52,20 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
 
         /* update of the neighbourhoods and reverse_landmarks */
         for (Point* w : W) {
+            cout << w->index << endl;
             if (i <= nu_2 - 1) {
                 // if i <= max(\nu_i) - 1 we know how to update reverse_landmarks and w.neighbourhood
                 reverse_landmarks[p->index].push_back(w);
                 w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
                 auto& points = w->neighbourhood;
                 for (const auto& point : points) {
-                    const Edge& e = Edge(point.second, p);
+                    Edge&& e = Edge(point.second, p);
                     w->simplices.edges.insert(e);
                 }
 
                 for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
                     for (auto p2 = next(p1); p2 != points.end(); ++p2) {
-                        const Triangle& t = Triangle(p1->second, p2->second, p);
+                        Triangle&& t = Triangle(p1->second, p2->second, p);
                         w->simplices.triangles.insert(t);
                     }
                 }
@@ -89,31 +74,29 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                 auto& points = w->neighbourhood;
 
                 // odd is w's neighbour which is the furthest from w
-                auto odd = points.rbegin();
-                odd++;
+                auto odd = points.rbegin().base();
+                odd--;
 
                 if (distance(w, odd->second) > distance(w, p)) {
                     // as we remove odd, all triangles containing odd aren't witnessed by w any longer
-                    for (const Triangle& t : w->simplices.triangles) {
-                        if (t.index1 == odd->second->index || t.index2 == odd->second->index || t.index3 == odd->second->index) {
+                    for (auto t = w->simplices.triangles.begin(); t != w->simplices.triangles.end(); ++t) {
+                        if (t->index1 == odd->second->index || t->index2 == odd->second->index || t->index3 == odd->second->index) {
                             w->simplices.triangles.erase(t);
                         }
                     }
 
-                    // same for the edges
-                    for (const Edge& e : w->simplices.edges) {
-                        if (e.index1 == odd->second->index || e.index2 == odd->second->index) {
+                    // same for the edge
+                    for (auto e = w->simplices.edges.begin(); e != w->simplices.edges.end(); ++e) {
+                        if (e->index1 == odd->second->index || e->index2 == odd->second->index) {
                             w->simplices.edges.erase(e);
                         }
                     }
-
                     // w is not a reverse landmark of odd any longer
                     del(w, &(reverse_landmarks[odd->second->index]));
                     // but now, w is a reverse landmark of p
                     reverse_landmarks[p->index].push_back(w);
 
-                    points.erase(odd.base());
-
+                    points.erase(odd);
                     // we insert the new neighbour and get its position in p_it
                     auto p_it = w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
 
@@ -125,7 +108,6 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                             }
                         }
                     }
-
                     // nu_1 is the number of neighbours to consider for an edge
                     auto edge_max = next(w->neighbourhood.begin(), nu_1);
                     if (distance(p_it->second, w) < distance(edge_max->second, w)) {
