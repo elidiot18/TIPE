@@ -33,13 +33,13 @@ Point* farthest(const vector<Point*>& W, const vector<Point*>& L) {
 }
 
 Triangle::Triangle(Point* i, Point* j, Point* k) {
-    vector<Point*> ptr_vec = {i, j, k};
-    sort(ptr_vec.begin(), ptr_vec.end(), pointer_sort);
-    this->p1 = ptr_vec[0];
-    this->p2 = ptr_vec[1];
-    this->p3 = ptr_vec[2];
+    vector<size_t> vec = {i->index, j->index, k->index};
+    sort(vec.begin(), vec.end());
+    this->index1 = vec[0];
+    this->index2 = vec[1];
+    this->index3 = vec[2];
 }
 
 Edge::Edge(Point* i, Point* j) {
-    i < j ? (this->p1 = i, this->p2 = j) : (this->p1 = j, this->p2 = i);
+    *i < *j ? (this->index1 = i->index, this->index2 = j->index) : (this->index1 = j->index, this->index2 = i->index);
 }
