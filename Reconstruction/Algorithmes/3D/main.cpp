@@ -44,13 +44,12 @@ int main(int argc, char **argv) {
         ifile >> x;
         ifile >> y;
         ifile >> z;
-        Point w(i, x, y, z);
-        W.push_back(move(w));
+        W.emplace_back(Point(i, x, y, z));
         ++i;
     }
 
     vector<Point*> _W;
-    for (auto w : W)
+    for (Point& w : W)
         _W.push_back(&w);
 
     reconstruction(_W, ofile);
