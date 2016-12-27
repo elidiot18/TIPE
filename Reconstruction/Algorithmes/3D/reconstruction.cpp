@@ -95,14 +95,14 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                 if (distance(w, odd->second) > distance(w, p)) {
                     // as we remove odd, all triangles containing odd aren't witnessed by w any longer
                     for (const Triangle& t : w->simplices.triangles) {
-                        if (t.p1->index == odd->second->index || t.p2->index == odd->second->index || t.p3->index == odd->second->index) {
+                        if (t.index1 == odd->second->index || t.index2 == odd->second->index || t.index3 == odd->second->index) {
                             w->simplices.triangles.erase(t);
                         }
                     }
 
                     // same for the edges
                     for (const Edge& e : w->simplices.edges) {
-                        if (e.p1->index == odd->second->index || e.p2->index == odd->second->index) {
+                        if (e.index1 == odd->second->index || e.index2 == odd->second->index) {
                             w->simplices.edges.erase(e);
                         }
                     }
@@ -151,9 +151,9 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
             for (const auto& w : p_reverse_landmarks) {
                 for (Triangle t : w->simplices.triangles) {
                     //we want to know if we have to add the triangle [p1, p2, p3]
-                    Point* p1 = t.p1;
-                    Point* p2 = t.p2;
-                    Point* p3 = t.p3;
+                    Point* p1 = W[t.index1];
+                    Point* p2 = W[t.index2];
+                    Point* p3 = W[t.index3];
 
                     vector<Point*> p1_potential_witnesses = reverse_landmarks[p1->index];
                     vector<Point*> p2_potential_witnesses = reverse_landmarks[p2->index];
@@ -286,12 +286,12 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
 
             // edges
             for (const Edge& e : CWL.edges) {
-                ofile << 2 << " " << L_inv[e.p1->index] << " " << L_inv[e.p2->index] << " 0 0 0" << endl;
+                ofile << 2 << " " << L_inv[e.index1] << " " << L_inv[e.index2] << " 0 0 0" << endl;
             }
 
             // faces
             for (const Triangle& t : CWL.triangles) {
-                ofile << 3 << " " << L_inv[t.p1->index]  << " " << L_inv[t.p2->index]  << " " << L_inv[t.p3->index] << endl;
+                ofile << 3 << " " << L_inv[t.index1]  << " " << L_inv[t.index2]  << " " << L_inv[t.index3] << endl;
             }
 
             // We stop
