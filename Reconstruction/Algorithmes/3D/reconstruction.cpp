@@ -62,11 +62,12 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                     if (point.second != p)
                         w->simplices.edges.emplace(Edge(point.second, p));
                 }
-
+                //cout << "nb of points : " << i+1 << "  nb of neighbours : " << points.size() << endl;
                 for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
                     for (auto p2 = next(p1); p2 != points.end(); ++p2) {
-                        if (p1->second != p && p2->second != p)
+                        if (p1->second != p && p2->second != p) {
                             w->simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
+                        }
                     }
                 }
             }
@@ -74,21 +75,29 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                 auto& points = w->neighbourhood;
 
                 // odd is w's neighbour which is the furthest from w
-                auto odd = points.rbegin().base();
+                auto odd = --points.end();
+//                cout<<odd->second->index<<endl;
 
                 if (odd->first > distance(w, p)) {
-                    cout << "foobar" << endl;
+  //                  cout << "foobar" << endl;
+    //                cout << w->simplices.triangles.size() << endl;
                     // as we remove odd, all triangles containing odd aren't witnessed by w any longer
-                    for (auto t = w->simplices.triangles.begin(); t != w->simplices.triangles.end(); ++t) {
+                    for (auto t = w->simplices.triangles.begin(); t != w->simplices.triangles.end();) {
                         if (t->index1 == odd->second->index || t->index2 == odd->second->index || t->index3 == odd->second->index) {
-                            w->simplices.triangles.erase(t);
+                            t = w->simplices.triangles.erase(t);
+                        }
+                        else {
+                            ++t;
                         }
                     }
 
                     // same for the edge
-                    for (auto e = w->simplices.edges.begin(); e != w->simplices.edges.end(); ++e) {
+                    for (auto e = w->simplices.edges.begin(); e != w->simplices.edges.end();) {
                         if (e->index1 == odd->second->index || e->index2 == odd->second->index) {
-                            w->simplices.edges.erase(e);
+                            e = w->simplices.edges.erase(e);
+                        }
+                        else {
+                            ++e;
                         }
                     }
 
@@ -100,15 +109,16 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                     points.erase(odd);
                     // we insert the new neighbour and get its position in p_it
                     auto p_it = w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
+      //              cout << points.size() << endl;
 
                     for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
-                        cout << "hello1" << endl;
+        //                cout << "hello1" << endl;
                         if (p1 != p_it) {
                             for (auto p2 = next(p1); p2 != points.end(); ++p2) {
-                                cout << "hello2" << endl;
+          //                      cout << "hello2" << endl;
                                 if (p2 != p_it) {
                                     w->simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
-                                    cout << "yo" << endl;
+            //                        cout << "yo" << endl;
                                 }
                             }
                         }
@@ -133,11 +143,11 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
 
         vector<Point*>& p_reverse_landmarks = reverse_landmarks[p->index];
         for (Point* w : p_reverse_landmarks) {
-            for (Triangle t : w->simplices.triangles) {
+            for (auto t = w->simplices.triangles.begin(); t != w->simplices.triangles.end();) {
                 //we want to know if we have to add the triangle [p1, p2, p3]
-                Point* p1 = W[t.index1];
-                Point* p2 = W[t.index2];
-                Point* p3 = W[t.index3];
+                Point* p1 = W[t->index1];
+                Point* p2 = W[t->index2];
+                Point* p3 = W[t->index3];
 
                 vector<Point*> p1_potential_witnesses = reverse_landmarks[p1->index];
                 vector<Point*> p2_potential_witnesses = reverse_landmarks[p2->index];
@@ -205,7 +215,10 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                 // for the moment, t is in w.simplices
                 // do we have to remove it ?
                 if (byebye_triangle) {
-                    w->simplices.triangles.erase(t);
+                    t = w->simplices.triangles.erase(t);
+                }
+                else {
+                    ++t;
                 }
             }
         }
