@@ -59,12 +59,14 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                 w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
                 auto& points = w->neighbourhood;
                 for (const auto& point : points) {
-                    w->simplices.edges.emplace(Edge(point.second, p));
+                    if (point.second != p)
+                        w->simplices.edges.emplace(Edge(point.second, p));
                 }
 
                 for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
                     for (auto p2 = next(p1); p2 != points.end(); ++p2) {
-                        w->simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
+                        if (p1->second != p && p2->second != p)
+                            w->simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
                     }
                 }
             }
@@ -129,114 +131,81 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
             }
         }
 
-        if (i == 1) {
-            // no triangle to add !
-        }
-        else {
-            vector<Point*>& p_reverse_landmarks = reverse_landmarks[p->index];
-            for (Point* w : p_reverse_landmarks) {
-                for (Triangle t : w->simplices.triangles) {
-                    //we want to know if we have to add the triangle [p1, p2, p3]
-                    Point* p1 = W[t.index1];
-                    Point* p2 = W[t.index2];
-                    Point* p3 = W[t.index3];
+        vector<Point*>& p_reverse_landmarks = reverse_landmarks[p->index];
+        for (Point* w : p_reverse_landmarks) {
+            for (Triangle t : w->simplices.triangles) {
+                //we want to know if we have to add the triangle [p1, p2, p3]
+                Point* p1 = W[t.index1];
+                Point* p2 = W[t.index2];
+                Point* p3 = W[t.index3];
 
-                    vector<Point*> p1_potential_witnesses = reverse_landmarks[p1->index];
-                    vector<Point*> p2_potential_witnesses = reverse_landmarks[p2->index];
-                    vector<Point*> p3_potential_witnesses = reverse_landmarks[p3->index];
+                vector<Point*> p1_potential_witnesses = reverse_landmarks[p1->index];
+                vector<Point*> p2_potential_witnesses = reverse_landmarks[p2->index];
+                vector<Point*> p3_potential_witnesses = reverse_landmarks[p3->index];
 
-                    Edge e1 = Edge(p1, p2);
-                    Edge e2 = Edge(p1, p3);
-                    Edge e3 = Edge(p2, p3);
+                Edge e1 = Edge(p1, p2);
+                Edge e2 = Edge(p1, p3);
+                Edge e3 = Edge(p2, p3);
 
-                    // checking if the edge e1 is witnessed
-                    bool e1_witnessed = false;
+                bool byebye_triangle = false;
 
-                    for (const auto rev_land : p1_potential_witnesses) {
+                // checking if the edge e1 is witnessed
+                for (const auto rev_land : p1_potential_witnesses) {
+                    if (rev_land->simplices.edges.find(e1) != rev_land->simplices.edges.end()) {
+                        byebye_triangle = true;
+                        break;
+                    }
+                }
+                /*if (!byebye_triangle) {
+                    for (const auto rev_land : p2_potential_witnesses) {
                         if (rev_land->simplices.edges.find(e1) != rev_land->simplices.edges.end()) {
-                            e1_witnessed = true;
+                            byebye_triangle = true;
                             break;
                         }
                     }
-                    if (!e1_witnessed) {
-                        for (const auto rev_land : p2_potential_witnesses) {
-                            if (rev_land->simplices.edges.find(e1) != rev_land->simplices.edges.end()) {
-                                e1_witnessed = true;
-                                break;
-                            }
-                        }
-                    }
+                }*/
 
-                    // checking if the edge e2 is witnessed
-                    bool e2_witnessed = false;
-
+                // checking if the edge e2 is witnessed
+                if (!byebye_triangle) {
                     for (const auto rev_land : p1_potential_witnesses) {
                         if (rev_land->simplices.edges.find(e2) != rev_land->simplices.edges.end()) {
-                            e2_witnessed = true;
+                            byebye_triangle = true;
                             break;
                         }
                     }
-                    if (!e2_witnessed) {
-                        for (const auto rev_land : p3_potential_witnesses) {
-                            if (rev_land->simplices.edges.find(e2) != rev_land->simplices.edges.end()) {
-                                e2_witnessed = true;
-                                break;
-                            }
+                }
+                /*if (!byebye_triangle) {
+                    for (const auto rev_land : p3_potential_witnesses) {
+                        if (rev_land->simplices.edges.find(e2) != rev_land->simplices.edges.end()) {
+                            byebye_triangle = true;
+                            break;
                         }
                     }
+                }*/
 
-                    // checking if the edge e3 is witnessed
-                    bool e3_witnessed = false;
-
+                // checking if the edge e3 is witnessed
+                if (!byebye_triangle) {
                     for (const auto rev_land : p2_potential_witnesses) {
                         if (rev_land->simplices.edges.find(e3) != rev_land->simplices.edges.end()) {
-                            e3_witnessed = true;
+                            byebye_triangle = true;
                             break;
                         }
                     }
-                    if (!e3_witnessed) {
-                        for (const auto rev_land : p3_potential_witnesses) {
-                            if (rev_land->simplices.edges.find(e3) != rev_land->simplices.edges.end()) {
-                                e3_witnessed = true;
-                                break;
-                            }
+                }
+                /*if (!byebye_triangle) {
+                    for (const auto rev_land : p3_potential_witnesses) {
+                        if (rev_land->simplices.edges.find(e3) != rev_land->simplices.edges.end()) {
+                            byebye_triangle = true;
+                            break;
                         }
                     }
+                }*/
 
-                    if (e1_witnessed) {
-                        if (w->simplices.edges.insert(e1).second)
-                            ++faces;
-                    }
-                    else {
-                        if (!w->simplices.edges.erase(e1))
-                           --faces;
-                    }
-
-
-                    if (e2_witnessed) {
-                        if (w->simplices.edges.insert(e2).second)
-                            ++faces;
-                    }
-                    else {
-                        if (!w->simplices.edges.erase(e2))
-                           --faces;
-                    }
-
-                    if (e3_witnessed) {
-                        if (w->simplices.edges.insert(e3).second)
-                            ++faces;
-                    }
-                    else {
-                        if (!w->simplices.edges.erase(e3))
-                           --faces;
-                    }
-
-                    // if every edge is witnessed then the triangle is witnessed (it is itself witnessed by definition)
-                    // for the moment, t is in w.simplices
-                    // do we have to remove it ?
-                    if (!(e1_witnessed && e2_witnessed && e3_witnessed)) {
-                        w->simplices.triangles.erase(t);
-                    }
+                // if every edge is witnessed then the triangle is witnessed (it is itself witnessed by definition)
+                // for the moment, t is in w.simplices
+                // do we have to remove it ?
+                if (byebye_triangle) {
+                    w->simplices.triangles.erase(t);
                 }
             }
         }
