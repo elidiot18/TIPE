@@ -34,7 +34,6 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
     /* This vector is going to be built for the displaying */
 
     // The simplicial complex (actually, only the 3-faces)
-    // CWL[w] contains a list of vectors [i, j] iff w < i && w < j && [w, i, j] is a triangle of the reconstruction
     SimplicialComplex CWL;
 
     /* Counts the number of faces of CWL */
