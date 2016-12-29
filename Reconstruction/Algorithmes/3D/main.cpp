@@ -9,29 +9,35 @@
 
 using namespace std;
 
-int main(int argc, char **argv) {
-    if (argc <= 1) {
+int main(int argc, char** argv)
+{
+    if (argc <= 1)
+    {
         cout << "You need to specify a file";
     }
-    if (argc > 2) {
+    if (argc > 2)
+    {
         cout << "There is only one argument to be specified";
     }
     ifstream ifile;
     ifile.open(argv[1], ios::in);
-    if (!ifile.is_open()) {
+    if (!ifile.is_open())
+    {
         return -1;
     }
     string name = argv[1];
     name = remove_extension(name);
-    name = name + (string)".cplx";
+    name = name + (string) ".cplx";
     ofstream ofile(name.c_str(), ios::out | ios::trunc);
-    if (!ofile.is_open()) {
+    if (!ofile.is_open())
+    {
         return -1;
     }
 
     string dim;
     getline(ifile, dim);
-    if (dim != "3") {
+    if (dim != "3")
+    {
         cout << "This algorithm does only work for dimension 3";
         return 42;
     }
@@ -39,7 +45,8 @@ int main(int argc, char **argv) {
     vector<Point> W;
 
     size_t i = 0;
-    while (ifile) {
+    while (ifile)
+    {
         double x, y, z;
         ifile >> x;
         ifile >> y;
