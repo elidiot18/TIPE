@@ -13,8 +13,7 @@ struct Point;
 struct Edge;
 struct Triangle;
 
-double distance(const Coordinates&, const Coordinates&);
-double distance(const Point*, const Point&);
+double _distance(const Point*, const Point*);
 double distance(const Point*, const std::vector<Point*>&);
 Point* farthest(const std::vector<Point*>&, const std::vector<Point*>&);
 Edge get_edge(Point*, Point*);
@@ -37,7 +36,7 @@ struct Point {
     bool operator<(const Point& rhs) const {return this->index < rhs.index;}
     bool operator==(const Point& rhs) const {return this->index == rhs.index;}
 
-    Point(size_t index, double x, double y, double z) {this->index = index; coordinates.x = x; coordinates.y = y; coordinates.z =z;}
+    Point(size_t index, double x, double y, double z) {this->index = index; coordinates.x = x; coordinates.y = y; coordinates.z = z;}
 
     std::multimap<double, Point*> neighbourhood;
 
@@ -45,14 +44,14 @@ struct Point {
 };
 
 struct Edge {
-    Edge(const Point*, const Point*);
+    Edge(Point*, Point*);
     bool operator<(const Edge& e) const {return e.index1 < this->index1 || (e.index1 == this->index1 && e.index2 < this->index2);}
     size_t index1;
     size_t index2;
 };
 
 struct Triangle {
-    Triangle(const Point*, const Point*, const Point*);
+    Triangle(Point*, Point*, Point*);
     bool operator<(const Triangle& t) const {return t.index1 < this->index1 || (t.index1 == this->index1 && t.index2 < this->index2) || (t.index1 == this->index1 && t.index2 == this->index2 && t.index3 < this->index3);}
     size_t index1;
     size_t index2;
