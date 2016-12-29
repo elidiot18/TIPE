@@ -8,7 +8,7 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
      * nu sequence *
      ***************/
 
-    size_t nu_0 = 1, nu_1 = 2, nu_2 = 3;
+    size_t nu_0 = 1, nu_1 = 6, nu_2 = 6;
 
     /** reconstruction **/
 
@@ -162,7 +162,7 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                     if (p_it->first < e_max.first) {
                         // We add the edges which contain p
                         ///////////////////////////////////
-                        for (auto point = neighbours.begin(); point->second->index != e_max.second->index; ++point) {
+                        for (auto point = neighbours.begin(); point != neighbours.end() && point->second->index != e_max.second->index; ++point) {
                             if (point != p_it) {
                                 simplices.edges.emplace(Edge(point->second, p));
                             }
