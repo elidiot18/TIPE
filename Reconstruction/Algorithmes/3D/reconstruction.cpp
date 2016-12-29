@@ -23,7 +23,7 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
     L.push_back(W[0]);
 
     for (Point* w : W) {
-        w->neighbourhood.insert(pair<double, Point*>(distance(w, L[0]), L[0]));
+        w->neighbourhood.emplace(make_pair(_distance(w, L[0]), L[0]));
     }
 
     // List of the reverse-landmarks of each point of L
@@ -44,7 +44,6 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
     size_t i = 1;
     while (i < n) {
         cout << i << endl;
-
         // We add to L the point of W\L which is the farthest from L
         Point* p = farthest(W, L);
         L.push_back(p);
@@ -52,87 +51,136 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
 
         /* update of the neighbourhoods and reverse_landmarks */
         for (Point* w : W) {
-//            cout<<w->index<<endl;
+            auto& neighbours = w->neighbourhood;
+            auto& simplices = w->simplices;
+
+            ////////////////////////////
+            // If neighbours is not full
+            ////////////////////////////
             if (i <= nu_2 - 1) {
-                // if i <= max(\nu_i) - 1 we know how to update reverse_landmarks and w.neighbourhood
                 reverse_landmarks[p->index].push_back(w);
-                w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
-                auto& points = w->neighbourhood;
-                for (const auto& point : points) {
-                    if (point.second != p)
-                        w->simplices.edges.emplace(Edge(point.second, p));
+
+                auto p_it = neighbours.emplace(make_pair(_distance(w, p), p));
+
+                /* Triangles */
+                // We put as many triangles as possible
+                ///////////////////////////////////////
+                for (auto p1 = neighbours.begin(); p1 != neighbours.end(); ++p1) {
+                    for (auto p2 = next(p1); p2 != neighbours.end(); ++p2) {
+                        if (p1->second != p && p2->second != p)
+                            simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
+                    }
                 }
-                //cout << "nb of points : " << i+1 << "  nb of neighbours : " << points.size() << endl;
-                for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
-                    for (auto p2 = next(p1); p2 != points.end(); ++p2) {
-                        if (p1->second != p && p2->second != p) {
-                            w->simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
+
+                /* Edges */
+                // If nu_1 == nu_2 we put as many edges as possible
+                ///////////////////////////////////////////////////
+                if (i <= nu_1 - 1 || nu_1 == nu_2) {
+                    for (auto point = neighbours.begin(); point != neighbours.end(); ++point) {
+                        if (point != p_it) {
+                            simplices.edges.emplace(Edge(point->second, p));
                         }
+                    }
+                }
+                // Else, we have to check if w's edges are affected
+                ///////////////////////////////////////////////////
+                else {
+                    auto& e_max = *next(neighbours.begin(), nu_1);
+                    if (p_it->first < e_max.first) {
+                        // We add the edges which contain p
+                        ///////////////////////////////////
+                        for (auto point = neighbours.begin(); point->second->index != e_max.second->index; ++point) {
+                            if (point != p_it) {
+                                simplices.edges.emplace(Edge(point->second, p));
+                            }
+                        }
+                        // We delete the edges which contain the point which has been removed from the nu_1 first neighbours
+                        ////////////////////////////////////////////////////////////////////////////////////////////////////
+                        for (auto e = simplices.edges.begin(); e != simplices.edges.end();) {
+                            if (e->index1 == e_max.second->index || e->index2 == e_max.second->index) {
+                                e = simplices.edges.erase(e);
+                            }
+                            else {
+                                ++e;
+                            }
+                        }
+                    }
+                    else {
+                        // p only affected w's triangles and not its edges
                     }
                 }
             }
             else {
-                auto& points = w->neighbourhood;
+                auto t_max_it = --neighbours.end();
+                auto t_max = *t_max_it;
 
-                // odd is w's neighbour which is the furthest from w
-                auto odd = --points.end();
-//                cout<<odd->second->index<<endl;
+                // If w's triangles are affected
+                ////////////////////////////////
+                if (t_max.first > _distance(w, p)) {
+                    // w is not a reverse landmark of odd any longer
+                    del(w, &(reverse_landmarks[t_max.second->index]));
+                    // but now, w is a reverse landmark of p
+                    reverse_landmarks[p->index].push_back(w);
 
-                if (odd->first > distance(w, p)) {
-  //                  cout << "foobar" << endl;
-    //                cout << w->simplices.triangles.size() << endl;
-                    // as we remove odd, all triangles containing odd aren't witnessed by w any longer
-                    for (auto t = w->simplices.triangles.begin(); t != w->simplices.triangles.end();) {
-                        if (t->index1 == odd->second->index || t->index2 == odd->second->index || t->index3 == odd->second->index) {
-                            t = w->simplices.triangles.erase(t);
+                    neighbours.erase(t_max_it);
+                    // we insert the new neighbour and get its position in p_it
+                    auto p_it = neighbours.emplace(make_pair(_distance(w, p), p));
+
+                    /* Triangles */
+
+                    // We remove the triangles which contain the points which has been removed
+                    //////////////////////////////////////////////////////////////////////////
+                    for (auto t = simplices.triangles.begin(); t != simplices.triangles.end();) {
+                        if (t->index1 == t_max.second->index || t->index2 == t_max.second->index || t->index3 == t_max.second->index) {
+                            t = simplices.triangles.erase(t);
                         }
                         else {
                             ++t;
                         }
                     }
 
-                    // same for the edge
-                    for (auto e = w->simplices.edges.begin(); e != w->simplices.edges.end();) {
-                        if (e->index1 == odd->second->index || e->index2 == odd->second->index) {
-                            e = w->simplices.edges.erase(e);
-                        }
-                        else {
-                            ++e;
-                        }
-                    }
-
-                    // w is not a reverse landmark of odd any longer
-                    del(w, &(reverse_landmarks[odd->second->index]));
-                    // but now, w is a reverse landmark of p
-                    reverse_landmarks[p->index].push_back(w);
-
-                    points.erase(odd);
-                    // we insert the new neighbour and get its position in p_it
-                    auto p_it = w->neighbourhood.insert(pair<double, Point*>(distance(w, p), p));
-      //              cout << points.size() << endl;
-
-                    for (auto p1 = points.begin(); p1 != points.end(); ++p1) {
-        //                cout << "hello1" << endl;
+                    // We add the triangles which contain p
+                    ///////////////////////////////////////
+                    for (auto p1 = neighbours.begin(); p1 != neighbours.end(); ++p1) {
                         if (p1 != p_it) {
-                            for (auto p2 = next(p1); p2 != points.end(); ++p2) {
-          //                      cout << "hello2" << endl;
+                            for (auto p2 = next(p1); p2 != neighbours.end(); ++p2) {
                                 if (p2 != p_it) {
-                                    w->simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
-            //                        cout << "yo" << endl;
+                                    simplices.triangles.emplace(Triangle(p1->second, p2->second, p));
                                 }
                             }
                         }
                     }
 
-                    // nu_1 is the number of neighbours to consider for an edge
-                    auto edge_max = next(w->neighbourhood.begin(), nu_1);
+                    /* Edges */
 
-                    if (p_it->first < edge_max->first) {
-                        for (auto point = points.begin(); point != edge_max; ++point) {
+                    // if nu_1 == nu_2 then the points which has been removed from the nu_1 nearest neighbours IS the one which has been removed
+                    // else, this point is the first next to the nu_1 nearest neighbours
+                    auto& e_max = (nu_1 == nu_2) ? t_max : *next(neighbours.begin(), nu_1);
+
+                    // If w's edges are affected
+                    ////////////////////////////
+                    if (p_it->first < e_max.first) {
+                        // We add the edges which contain p
+                        ///////////////////////////////////
+                        for (auto point = neighbours.begin(); point->second->index != e_max.second->index; ++point) {
                             if (point != p_it) {
-                                w->simplices.edges.emplace(Edge(point->second, p));
+                                simplices.edges.emplace(Edge(point->second, p));
                             }
                         }
+
+                        // We delete the edges which contain the point which has been removed from the nu_1 nearest neighbours
+                        //////////////////////////////////////////////////////////////////////////////////////////////////////
+                        for (auto e = simplices.edges.begin(); e != simplices.edges.end();) {
+                            if (e->index1 == e_max.second->index || e->index2 == e_max.second->index) {
+                                e = simplices.edges.erase(e);
+                            }
+                            else {
+                                ++e;
+                            }
+                        }
+                    }
+                    else {
+                        // p only affected w's triangles and not its edges
                     }
                 }
                 else {
@@ -141,7 +189,7 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
             }
         }
 
-        vector<Point*>& p_reverse_landmarks = reverse_landmarks[p->index];
+        auto& p_reverse_landmarks = reverse_landmarks[p->index];
         for (Point* w : p_reverse_landmarks) {
             for (auto t = w->simplices.triangles.begin(); t != w->simplices.triangles.end();) {
                 //we want to know if we have to add the triangle [p1, p2, p3]
@@ -149,63 +197,63 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
                 Point* p2 = W[t->index2];
                 Point* p3 = W[t->index3];
 
-                vector<Point*> p1_potential_witnesses = reverse_landmarks[p1->index];
-                vector<Point*> p2_potential_witnesses = reverse_landmarks[p2->index];
-                vector<Point*> p3_potential_witnesses = reverse_landmarks[p3->index];
+                auto& p1_potential_witnesses = reverse_landmarks[p1->index];
+                auto& p2_potential_witnesses = reverse_landmarks[p2->index];
+                //auto& p3_potential_witnesses = reverse_landmarks[p3->index];
 
                 Edge e1 = Edge(p1, p2);
                 Edge e2 = Edge(p1, p3);
                 Edge e3 = Edge(p2, p3);
 
-                bool byebye_triangle = false;
+                bool byebye_triangle = true;
 
                 // checking if the edge e1 is witnessed
-                for (const auto rev_land : p1_potential_witnesses) {
+                for (const auto& rev_land : p1_potential_witnesses) {
                     if (rev_land->simplices.edges.find(e1) != rev_land->simplices.edges.end()) {
-                        byebye_triangle = true;
+                        byebye_triangle = false;
                         break;
                     }
                 }
-                /*if (!byebye_triangle) {
-                    for (const auto rev_land : p2_potential_witnesses) {
+                /*if (byebye_triangle) {
+                    for (const auto& rev_land : p2_potential_witnesses) {
                         if (rev_land->simplices.edges.find(e1) != rev_land->simplices.edges.end()) {
-                            byebye_triangle = true;
+                            byebye_triangle = false;
                             break;
                         }
                     }
                 }*/
 
                 // checking if the edge e2 is witnessed
-                if (!byebye_triangle) {
-                    for (const auto rev_land : p1_potential_witnesses) {
+                if (byebye_triangle) {
+                    for (const auto& rev_land : p1_potential_witnesses) {
                         if (rev_land->simplices.edges.find(e2) != rev_land->simplices.edges.end()) {
-                            byebye_triangle = true;
+                            byebye_triangle = false;
                             break;
                         }
                     }
                 }
-                /*if (!byebye_triangle) {
-                    for (const auto rev_land : p3_potential_witnesses) {
+                /*if (byebye_triangle) {
+                    for (const auto& rev_land : p3_potential_witnesses) {
                         if (rev_land->simplices.edges.find(e2) != rev_land->simplices.edges.end()) {
-                            byebye_triangle = true;
+                            byebye_triangle = false;
                             break;
                         }
                     }
                 }*/
 
                 // checking if the edge e3 is witnessed
-                if (!byebye_triangle) {
-                    for (const auto rev_land : p2_potential_witnesses) {
+                if (byebye_triangle) {
+                    for (const auto& rev_land : p2_potential_witnesses) {
                         if (rev_land->simplices.edges.find(e3) != rev_land->simplices.edges.end()) {
-                            byebye_triangle = true;
+                            byebye_triangle = false;
                             break;
                         }
                     }
                 }
-                /*if (!byebye_triangle) {
-                    for (const auto rev_land : p3_potential_witnesses) {
+                /*if (byebye_triangle) {
+                    for (const auto& rev_land : p3_potential_witnesses) {
                         if (rev_land->simplices.edges.find(e3) != rev_land->simplices.edges.end()) {
-                            byebye_triangle = true;
+                            byebye_triangle = false;
                             break;
                         }
                     }
@@ -224,17 +272,17 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
         }
 
         // We only want the reconstruction for i = 500 (then we stop)
-        if (i == 100) {
+        if (i == 500) {
             for (Point* w : W) {
-                for (Edge e : w->simplices.edges) {
+                for (auto& e : w->simplices.edges) {
                     CWL.edges.insert(e);
                 }
-                for (Triangle t : w->simplices.triangles) {
+                for (auto& t : w->simplices.triangles) {
                     CWL.triangles.insert(t);
                 }
             }
 
-            //Geomview OFF format
+            // Geomview OFF format
             // Syntax : "OFF"
             ofile << "OFF" << endl;
 
@@ -249,7 +297,7 @@ void reconstruction(vector<Point*>& W, ofstream& ofile) {
             // Syntax : n i j k ... for each n-face which indexes are i j k...
             // points
             for (Point* p : L) {
-                ofile << 1 << " " << p->index << " 255 0 0" << endl;
+                ofile << 1 << " " << L_inv[p->index] << " 255 0 0" << endl;
             }
 
             // edges
