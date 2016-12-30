@@ -50,7 +50,7 @@ void reconstruction(vector<Point*>& W, ofstream& ofile)
     {
         cout << i << endl;
         // We add to L the point of W\L which is the farthest from L
-        Point* p = farthest(W, L);
+        Point* p = farthest(W);
         L.push_back(p);
         L_inv[p->index] = i;
 
@@ -60,7 +60,6 @@ void reconstruction(vector<Point*>& W, ofstream& ofile)
             auto& neighbours = w->neighbourhood;
             auto& simplices = w->simplices;
 
-            ////////////////////////////
             // If neighbours is not full
             ////////////////////////////
             if (i <= nu_2 - 1)
@@ -331,18 +330,19 @@ void reconstruction(vector<Point*>& W, ofstream& ofile)
             }
         }
 
-        // We only want the reconstruction for i = 2000 (then we stop)
-        if (i == 2000)
+        if (i == 15000)
         {
             for (Point* w : W)
             {
                 for (auto& e : w->simplices.edges)
                 {
-                    CWL.edges.insert(e);
+                    //if (CWL.edges.insert(e).second)
+                        //++faces;
                 }
                 for (auto& t : w->simplices.triangles)
                 {
-                    CWL.triangles.insert(t);
+                    if (CWL.triangles.insert(t).second)
+                        ++faces;
                 }
             }
 
@@ -352,7 +352,7 @@ void reconstruction(vector<Point*>& W, ofstream& ofile)
 
             // Syntax : "number of vertices" "number of faces" "number of edges" (number of edges is
             // not read so we can put whatever we want)
-            ofile << i + 1 << " " << faces << " " << 42 << endl;
+            ofile << i + 1 << " " << faces + i + 1 << " " << 42 << endl;
 
             // Syntax : x y z for each vertex
             for (Point* p : L)
