@@ -1,0 +1,52 @@
+﻿\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[frenchb]{babel}
+\usepackage{xcolor}
+\usepackage[a4paper]{geometry}
+\geometry{top=1.5cm, bottom=1.5cm, left=2cm, right=2cm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumerate}
+\usepackage{hyperref}
+\let\endtitlepage\relax
+
+\title{\textbf{Reconstruction de formes multi-échelles en dimensions deux et trois grâce à la strucure de complexes de témoins}}
+\author{CHALUMEAU Adam,	ELIS Pierre}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Définitions}
+\subsection{Définitions basiques}
+\paragraph{Definition} Un simplexe de $\mathbb{R}^d$ est l'enveloppe convexe de $d+1$ points affinement indépendants qui sont appelés ses sommets.
+\paragraph{Definition} Une $k$-face d'un simplexe de $\mathbb{R}^d$ est l'enveloppe convexe de $k+1$ sommets de $P$. Si cette enveloppe convexe n'est pas $P$ tout entier on parle de face propre
+\paragraph{Remarque} Une $k$-face d'un simplexe de $\mathbb{R}^d$ est un simplexe de $\mathbb{R}^k$
+\paragraph{Definition} Un complexe simplicial $C$ dans $\mathbb{R}^d$ est un ensemble de simplexes de $\mathbb{R}^d$ qui vérifie
+\begin{enumerate}[(i)]
+	\item toute face d'un simplexe de $C$ est elle-même un simplexe de $C$
+	\item l'intersection de deux simplexes de $C$ est soit vide soit une face commune à ces deux simplexes
+\end{enumerate}
+\paragraph{Definition} Une triangulation d'un nuage de points $P$ de $\mathbb{R}^d$ est un complexe simplicial $T$ tel que $\bigcup\limits_{t\in T}t = P$ et tel que tout simplexe de $t$ a ses sommets dans $P$.
+\subsection{La triangulation de Delaunay et le diagramme de Voronoi}
+\paragraph{Definition} Soit $P$ un nuage de points de $\mathbb{R}^d$ et $\sigma = (p_1, p_2, \cdots, p_n)$ un simplexe à sommets dans $P$. On dit que $\sigma$ est de Delaunay s'il existe une boule circonscrite à $\sigma$ dont l'intérieur est vide de tous points de $P$, i.e.
+$$\exists c\in \mathbb{R}^d, \, \exists r > 0, \, p_1, p_2, \cdots, p_n \in \mathcal S(c, r) \text{ et }\mathcal B(c, r)\cap P = \emptyset$$
+\paragraph{Definition} Une telle boule est appelée boule de Delaunay
+\paragraph{Definition} L'ensemble des simplexes de Delaunay d'un nuage de points est appelé triangulation de Delaunay de cet nuage de points (voir le théorème correspondant)
+\paragraph{Definition} Soit $P$ un nuage de points de $\mathbb{R}^d$. Soit $p\in P$. On appelle cellule de Voronoi de $p$ dans $P$ l'ensemble $\mathrm{Vor}_p(P) = \{q\in \mathbb{R}^d\,|\,\forall x\in P, d(x, p) \leq d(x, q)\}$ c'est à dire l'ensemble des points de $\mathbb{R}^d$ qui sont au moins aussi proches de $p$ que des autres points de $P$.
+\paragraph{Definition} Soit $P$ un nuage de points de $\mathbb{R}^d$. On appelle diagramme de Voronoi de $P$ l'ensemble $\mathrm{Vor}(P) = \{\mathrm{Vor}_p(P)\,|\,p\in P\}$
+\paragraph{Definition} Soit $P$ un nuage de points de $\mathbb{R}^d$, on appelle arête de Voronoi de $P$ toute intersection non vide d'élements de $\mathrm{Vor}(P)$
+\subsection{Reconstruction}
+\paragraph{Definition} Soient $S \subset \mathbb{R}^d$ et $\varepsilon>0$. Soit $W\subset \mathbb{R}^d$ un ensemble fini.
+\begin{enumerate}
+\item On dit que $W$ est un échantillon $\varepsilon$-bruité de $S$ si $\forall w \in W,\, d(w, S) \leq \varepsilon$
+\item On dit que $W$ est un $\varepsilon$-échantillon de $S$ si : $\forall s \in S,\, d(s, W) \leq \varepsilon$
+\item On dit que $W$ est un échantillon $\varepsilon$-creux de $S$ si : $\forall (w, s) \in W\times S,\, d(w, s) \leq \varepsilon$
+\end{enumerate}
+\paragraph{Definition} On appelle forme géométrique dans $\mathbb{R}^d$ tout sous-ensemble $S$ de $\mathbb{R}^d$
+\paragraph{Definition} Soit $S$ une forme géométrique dans $\mathbb{R}^d$, soient $x\in\mathbb{R}^d$ et $s_0\in S$. On dit $s_0$ est un plus proche voisin de $x$ dans $S$ si : $\forall s\in S, d(x, s_0) \leq d(x, s)$
+\paragraph{Definition} Soit $S$ une forme géométrique dans $\mathbb{R}^d$. On appelle axe médian de $S$ l'ensemble $M_S$ des points de $x$ de $\mathbb{R}^d$ tels que $x$ a au moins deux plus proches voisins distincts dans $S$
+\paragraph{Definition} Soit $S$ une forme géométrique dans $\mathbb{R}^d$. On appelle squelette de $S$ l'ensemble $\mathrm{Sql}_S$ adhérence du lieu des centres de boules ouvertes maximales incluses dans $\mathbb{R}^d\setminus S$, c'est à dire, l'ensemble des centres des boules $B\subset\mathbb{R}^d\setminus S$ telles que pour toute autre boule $B^\prime\subset\mathbb{R}^d\setminus S$, si $B\subset B^\prime$ alors $B=B^\prime$
+\paragraph{Definition}
+
+\end{document} 
