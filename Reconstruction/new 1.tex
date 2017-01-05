@@ -1,4 +1,4 @@
-﻿\documentclass{article}
+\documentclass{report}
 \usepackage[T1]{fontenc}
 \usepackage[frenchb]{babel}
 \usepackage{xcolor}
@@ -10,6 +10,12 @@
 \usepackage{hyperref}
 \let\endtitlepage\relax
 
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Vor}{\mathrm{Vor}}
+\newcommand{\Del}{\mathrm{Del}}
+\newcommand{\Sql}{\mathrm{Sql}}
+\newcommand{\eps}{\varepsilon}
+
 \title{\textbf{Reconstruction de formes multi-échelles en dimensions deux et trois grâce à la strucure de complexes de témoins}}
 \author{CHALUMEAU Adam,	ELIS Pierre}
 \date{\today}
@@ -17,36 +23,48 @@
 \begin{document}
 \maketitle
 
-\section{Définitions}
-\subsection{Définitions basiques}
-\paragraph{Definition} Un simplexe de $\mathbb{R}^d$ est l'enveloppe convexe de $d+1$ points affinement indépendants qui sont appelés ses sommets.
-\paragraph{Definition} Une $k$-face d'un simplexe de $\mathbb{R}^d$ est l'enveloppe convexe de $k+1$ sommets de $P$. Si cette enveloppe convexe n'est pas $P$ tout entier on parle de face propre
-\paragraph{Remarque} Une $k$-face d'un simplexe de $\mathbb{R}^d$ est un simplexe de $\mathbb{R}^k$
-\paragraph{Definition} Un complexe simplicial $C$ dans $\mathbb{R}^d$ est un ensemble de simplexes de $\mathbb{R}^d$ qui vérifie
+\appendix
+\chapter{Quelques définitions}
+\section{Définitions basiques}
+\paragraph{Definition} \textit{Un }simplexe \textit{de $\R^d$ est l'enveloppe convexe de $d+1$ points affinement indépendants qui sont appelés ses sommets}
+\paragraph{Definition} \textit{Une }$k$-face \textit{d'un simplexe de $\R^d$ est l'enveloppe convexe de $k+1$ sommets de $P$. Si cette enveloppe convexe n'est pas $P$ tout entier on parle de} \textit{face propre}
+\paragraph{Remarque} Une $k$-face d'un simplexe de $\R^d$ est un simplexe de $\R^k$
+\paragraph{Definition} \textit{Un }complexe simplicial \textit{$C$ dans $\R^d$ est un ensemble de simplexes de $\R^d$ qui vérifie}
 \begin{enumerate}[(i)]
-	\item toute face d'un simplexe de $C$ est elle-même un simplexe de $C$
-	\item l'intersection de deux simplexes de $C$ est soit vide soit une face commune à ces deux simplexes
+	\item \textit{toute face d'un simplexe de $C$ est elle-même un simplexe de $C$}
+	\item \textit{l'intersection de deux simplexes de $C$ est soit vide soit une face commune à ces deux simplexes}
 \end{enumerate}
-\paragraph{Definition} Une triangulation d'un nuage de points $P$ de $\mathbb{R}^d$ est un complexe simplicial $T$ tel que $\bigcup\limits_{t\in T}t = P$ et tel que tout simplexe de $t$ a ses sommets dans $P$.
-\subsection{La triangulation de Delaunay et le diagramme de Voronoi}
-\paragraph{Definition} Soit $P$ un nuage de points de $\mathbb{R}^d$ et $\sigma = (p_1, p_2, \cdots, p_n)$ un simplexe à sommets dans $P$. On dit que $\sigma$ est de Delaunay s'il existe une boule circonscrite à $\sigma$ dont l'intérieur est vide de tous points de $P$, i.e.
-$$\exists c\in \mathbb{R}^d, \, \exists r > 0, \, p_1, p_2, \cdots, p_n \in \mathcal S(c, r) \text{ et }\mathcal B(c, r)\cap P = \emptyset$$
-\paragraph{Definition} Une telle boule est appelée boule de Delaunay
-\paragraph{Definition} L'ensemble des simplexes de Delaunay d'un nuage de points est appelé triangulation de Delaunay de cet nuage de points (voir le théorème correspondant)
-\paragraph{Definition} Soit $P$ un nuage de points de $\mathbb{R}^d$. Soit $p\in P$. On appelle cellule de Voronoi de $p$ dans $P$ l'ensemble $\mathrm{Vor}_p(P) = \{q\in \mathbb{R}^d\,|\,\forall x\in P, d(x, p) \leq d(x, q)\}$ c'est à dire l'ensemble des points de $\mathbb{R}^d$ qui sont au moins aussi proches de $p$ que des autres points de $P$.
-\paragraph{Definition} Soit $P$ un nuage de points de $\mathbb{R}^d$. On appelle diagramme de Voronoi de $P$ l'ensemble $\mathrm{Vor}(P) = \{\mathrm{Vor}_p(P)\,|\,p\in P\}$
-\paragraph{Definition} Soit $P$ un nuage de points de $\mathbb{R}^d$, on appelle arête de Voronoi de $P$ toute intersection non vide d'élements de $\mathrm{Vor}(P)$
-\subsection{Reconstruction}
-\paragraph{Definition} Soient $S \subset \mathbb{R}^d$ et $\varepsilon>0$. Soit $W\subset \mathbb{R}^d$ un ensemble fini.
+\paragraph{Definition} \textit{Une }triangulation \textit{d'un nuage de points $P$ de $\R^d$ est un complexe simplicial $T$ tel que $\bigcup\limits_{t\in T}t = P$ et tel que tout simplexe de $t$ a ses sommets dans $P$}
+
+\section{La triangulation de Delaunay et le diagramme de Voronoi}
+\paragraph{Definition} \textit{Soit $E$ un ensemble. On appelle} nuage de points \textit{de $E$ tout sous ensemble fini de $E$}
+\paragraph{Definition} \textit{Soit $P$ un nuage de points de $\R^d$ et $\sigma = (p_1, p_2, \cdots, p_n)$ un simplexe à sommets dans $P$. On dit que $\sigma$ est un} simplexe de Delaunay \textit{s'il existe une boule circonscrite à $\sigma$, dite} boule de Delaunay\textit{, dont l'intérieur est vide de tous points de $P$, i.e.}
+$$\exists c\in \R^d, \, \exists r > 0, \, p_1, p_2, \cdots, p_n \in \mathcal S(c, r) \text{ et }\mathcal B(c, r)\cap P = \emptyset$$
+\paragraph{Definition} \textit{Soit $P$ un nuage de points de $\R^d$. L'ensemble des simplexes de Delaunay $\Del(P)$ d'un nuage de points est appelé} \textit{triangulation de Delaunay de ce nuage de points (voir le théorème correspondant)}
+\paragraph{Definition} \textit{Soit $P$ un nuage de points de $\R^d$. Soit $p\in P$. On appelle} cellule de Voronoi \textit{de $p$ dans $P$ l'ensemble $\Vor_p(P) = \{q\in \R^d\,|\,\forall x\in P, d(x, p) \leq d(x, q)\}$ c'est à dire l'ensemble des points de $\R^d$ qui sont au moins aussi proches de $p$ que des autres points de $P$}
+\paragraph{Definition} \textit{Soit $P$ un nuage de points de $\R^d$. On appelle} diagramme de Voronoi \textit{de $P$ l'ensemble $\Vor(P) = \{\Vor_p(P)\,|\,p\in P\}$}
+\paragraph{Definition} \textit{Soit $P$ un nuage de points de $\R^d$, on appelle} arête de Voronoi \textit{de $P$ toute intersection non vide d'élements de $\Vor(P)$}
+
+\section{Reconstruction}
+\paragraph{Definition} \textit{Soient $S \subset \R^d$ et $\eps>0$. Soit $W\subset \R^d$ un ensemble fini.}
 \begin{enumerate}
-\item On dit que $W$ est un échantillon $\varepsilon$-bruité de $S$ si $\forall w \in W,\, d(w, S) \leq \varepsilon$
-\item On dit que $W$ est un $\varepsilon$-échantillon de $S$ si : $\forall s \in S,\, d(s, W) \leq \varepsilon$
-\item On dit que $W$ est un échantillon $\varepsilon$-creux de $S$ si : $\forall (w, s) \in W\times S,\, d(w, s) \leq \varepsilon$
+\item \textit{On dit que $W$ est un} échantillon $\eps$-bruité \textit{de $S$ si $\forall w \in W,\, d(w, S) \leq \eps$}
+\item \textit{On dit que $W$ est un} $\eps$-échantillon \textit{de $S$ si : $\forall s \in S,\, d(s, W) \leq \eps$}
+\item \textit{On dit que $W$ est un} échantillon $\eps$-creux \textit{de $S$ si : $\forall (w, s) \in W\times S,\, d(w, s) \leq \eps$}
 \end{enumerate}
-\paragraph{Definition} On appelle forme géométrique dans $\mathbb{R}^d$ tout sous-ensemble $S$ de $\mathbb{R}^d$
-\paragraph{Definition} Soit $S$ une forme géométrique dans $\mathbb{R}^d$, soient $x\in\mathbb{R}^d$ et $s_0\in S$. On dit $s_0$ est un plus proche voisin de $x$ dans $S$ si : $\forall s\in S, d(x, s_0) \leq d(x, s)$
-\paragraph{Definition} Soit $S$ une forme géométrique dans $\mathbb{R}^d$. On appelle axe médian de $S$ l'ensemble $M_S$ des points de $x$ de $\mathbb{R}^d$ tels que $x$ a au moins deux plus proches voisins distincts dans $S$
-\paragraph{Definition} Soit $S$ une forme géométrique dans $\mathbb{R}^d$. On appelle squelette de $S$ l'ensemble $\mathrm{Sql}_S$ adhérence du lieu des centres de boules ouvertes maximales incluses dans $\mathbb{R}^d\setminus S$, c'est à dire, l'ensemble des centres des boules $B\subset\mathbb{R}^d\setminus S$ telles que pour toute autre boule $B^\prime\subset\mathbb{R}^d\setminus S$, si $B\subset B^\prime$ alors $B=B^\prime$
-\paragraph{Definition}
+\paragraph{Definition} \textit{On appelle} \textit{forme géométrique dans $\R^d$ tout sous-ensemble $S$ de $\R^d$}
+\paragraph{Definition} \textit{Soit $S$ une forme géométrique dans $\R^d$, soient $x\in\R^d$ et $s_0\in S$. On dit $s_0$ est un} plus proche voisin \textit{de $x$ dans $S$ si : $\forall s\in S, d(x, s_0) \leq d(x, s)$}
+\paragraph{Definition} \textit{Soit $S$ une forme géométrique dans $\R^d$. On appelle} axe médian \textit{de $S$ l'ensemble $M_S$ des points de $x$ de $\R^d$ tels que $x$ a au moins deux plus proches voisins distincts dans $S$}
+\paragraph{Definition} \textit{Soit $S$ une forme géométrique dans $\R^d$. On appelle} squelette \textit{de $S$ l'ensemble $\Sql_S$ adhérence du lieu des centres de boules ouvertes maximales incluses dans $\R^d\setminus S$, c'est à dire, l'ensemble des centres des boules $B\subset\R^d\setminus S$ telles que pour toute autre boule $B^\prime\subset\R^d\setminus S$, si $B\subset B^\prime$ alors $B=B^\prime$}
+\paragraph{Definition} \textit{Soit $S$ une forme géométrique dans $\R^d$. On appelle} local feature size \textit{la fonction qui à $s\in S$ associe la distance de $s$ à $M_S$ et on la note $\mathrm{lfs}_S$. Cette dernière est continue (voir le théorème correspondant) $S$ étant compact on appelle} reach \textit{et on note $\rho_S = \min_S\mathrm{lfs}_S$}
+\paragraph{Definition} \textit{On appelle arc toute fonction continue de $[0,1]$ dans $\R^d$}
+\paragraph{Definition} \textbf{Voronoi et Delaunay restreints} \textit{Soit $S$ une forme géométrique dans $\R^d$, soit $P$ un nuage de points de $S$. On appelle Voronoi restreint à $S$ de $P$ l'ensemble $\Vor_S(P)$ des cellules de Voronoi de $P$ qui intersectent $S$ c'est à dire $\Vor_S(P) = \{f\in\Vor(P)\,|\,f\cap S\neq\emptyset\}$. On appelle Delaunay restreint $\Del_S(P)$ le sous-complexe de $\Del(P)$ dual de $\Vor_S(P)$}
+\paragraph{Definition} \textbf{Complexe de témoins} \textit{Soient $W$ et $L$ deux nuages de points de $\R^d$.}
+\begin{itemize}
+\item[$\bullet$] \textit{Soit $w\in W$ et soit $\sigma = (p_0, p_2, \cdots, p_n)$ un simplexe à sommets dans $L$. On dit que $w$ est un} témoin \textit{de $\sigma$ ou que $w$} témoigne \textit{$\sigma$ si les sommets de $\sigma$ sont les $n+1$ plus proches voisins de $w$ dans $L$, i.e. : $\forall k\in[\![1,n]\!],\, \forall p\in L,\, d(w, p_k)\leq d(w, p)$}
+\item[$\bullet$] \textit{On appelle }complexe de témoins\textit{ et on note $C^W(L)$ le complexe simplicial de plus grand cardinal tel que tous ses simplexes aient un témoin dans $L$}
+\end{itemize}
+\paragraph{Remarque} Les points de $L$ ont vocation à être appelés \textit{landmarks} ou \textit{points repère} en version francisée.
+
 
 \end{document} 
