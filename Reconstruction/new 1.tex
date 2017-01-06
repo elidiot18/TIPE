@@ -16,6 +16,7 @@
 \newcommand{\Del}{\mathrm{Del}}
 \newcommand{\Sql}{\mathrm{Sql}}
 \newcommand{\eps}{\varepsilon}
+\newcommand{\lfs}{\mathrm{lfs}}
 
 \newtheorem{theorem}{Théorème}
 \newtheorem{definition}{Définition}
@@ -35,7 +36,7 @@
 \chapter{Définitions, lemmes et théorèmes}
 \paragraph{Résumé}
 \begin{quote}
-{\small Dans cette première annexe se trouvent toutes les définitions additionnelles à celles du programme dont nous avons eu besoin pour traiter pleinement notre sujet de TIPE. Quelques propriétés viennent jusitifer certaines définitions. En outre cette annexe contient les lemmes utiles à la démonstration des deux théorèmes principaux de notre étude, ainsi que ceux-ci.}
+{\small Dans cette première annexe se trouvent toutes les définitions additionnelles à celles du programme dont nous avons eu besoin pour traiter pleinement notre sujet de TIPE. Quelques propriétés viennent jusitifer certaines définitions. En outre cette annexe contient les lemmes utiles à la démonstration des deux théorèmes principaux de notre étude, ainsi que ceux-ci et leur preuves respectives.}
 \end{quote}
 
 \section{Définitions basiques}
@@ -73,8 +74,16 @@
 	$$\exists c\in \R^d, \, \exists r > 0, \, p_1, p_2, \cdots, p_n \in \mathcal S(c, r) \text{ et }\mathcal B(c, r)\cap P = \emptyset$$
 \end{definition}
 
+\begin{prop}
+	Soit $P$ un nuage de points de $\R^d$. L'ensemble des simplexes de Delaunay $\Del(P)$ du nuage de points $P$ est une triangulation de $P$.
+\end{prop}
+
+\begin{proof}
+	Démonstration à réaliser. \#espace des sphères
+\end{proof}
+
 \begin{definition}
-	Soit $P$ un nuage de points de $\R^d$. L'ensemble des simplexes de Delaunay $\Del(P)$ d'un nuage de points est appelé \textnormal{triangulation de Delaunay} de ce nuage de points (voir le théorème correspondant)
+	Soit $P$ un nuage de points de $\R^d$. La triangulation $\Del(P)$  de $P$ est appelée \textnormal{triangulation de Delaunay} $P$
 \end{definition}
 
 \begin{definition}
@@ -89,6 +98,14 @@
 	Soit $P$ un nuage de points de $\R^d$, on appelle \textnormal{arête de Voronoi} de $P$ toute intersection non vide d'élements de $\Vor(P)$
 \end{definition}
 
+\begin{prop}
+	La triangulation de Delaunay d'un nuage de points et son diagramme de Voronoï sont duaux l'un de l'autre.
+\end{prop}
+
+\begin{proof}
+	Preuve à insérer.
+\end{proof}
+
 \section{Reconstruction}
 \begin{definition}
 	 Soient $S \subset \R^d$ et $\eps>0$. Soit $W\subset \R^d$ un ensemble fini.
@@ -99,33 +116,110 @@
 	\end{enumerate}
 \end{definition}
 
+\begin{rmq}
+	Jusqu'à présent nous avons donné des définitions générales dans $\R^d$. Néanmoins le bagage mathématique nécessaire aux démonstrations de tous les théorèmes en dimension quelconque dépassent largement les prétentions de notre TIPE et nous envisagerons désormais des formes géométriques dans le plan $\R^2$. Nous nous placerons toutefois par moments en dimension supérieure.
+\end{rmq}
+
 \begin{definition}
-	On appelle \textnormal{forme géométrique dans $\R^d$} tout sous-ensemble $S$ de $\R^d$
+	On appelle courbe fermée de $\R^2$ tout ensemble $S\subset\R^2$ homéomorphe à la sphère unité.
 \end{definition}
 
 \begin{definition}
-	Soit $S$ une forme géométrique dans $\R^d$, soient $x\in\R^d$ et $s_0\in S$. On dit $s_0$ est un \textnormal{plus proche voisin} de $x$ dans $S$ si : $\forall s\in S, d(x, s_0) \leq d(x, s)$
+	Soit $S$ un sous-ensemble de $\R^d$, soient $x\in\R^d$ et $s_0\in S$. On dit $s_0$ est un \textnormal{plus proche voisin} de $x$ dans $S$ si : $\forall s\in S, d(x, s_0) \leq d(x, s)$
 \end{definition}
 	 
 \begin{definition}
-	Soit $S$ une forme géométrique dans $\R^d$. On appelle \textnormal{axe médian} de $S$ l'ensemble $M_S$ des points de $x$ de $\R^d$ tels que $x$ a au moins deux plus proches voisins distincts dans $S$
+	Soit $S$ un sous-ensemble de $\R^d$. On appelle \textnormal{axe médian} de $S$ l'ensemble $M_S$ des points de $x$ de $\R^d$ tels que $x$ a au moins deux plus proches voisins distincts dans $S$
 \end{definition}
 
 \begin{definition}
-	Soit $S$ une forme géométrique dans $\R^d$. On appelle \textnormal{quelette} de $S$ l'ensemble $\Sql_S$ adhérence de l'ensemble des centres de boules ouvertes maximales incluses dans $\R^d\setminus S$, c'est à dire, l'ensemble des centres des boules $B\subset\R^d\setminus S$ telles que pour toute autre boule $B^\prime\subset\R^d\setminus S$, si $B\subset B^\prime$ alors $B=B^\prime$
+	Soit $S$ un sous-ensemble de $\R^d$. On appelle \textnormal{quelette} de $S$ l'ensemble $\Sql_S$ adhérence de l'ensemble des centres de boules ouvertes maximales incluses dans $\R^d\setminus S$, c'est à dire, l'ensemble des centres des boules $B\subset\R^d\setminus S$ telles que pour toute autre boule $B^\prime\subset\R^d\setminus S$, si $B\subset B^\prime$ alors $B=B^\prime$
 \end{definition}
 
+\begin{prop}
+	On a l'inclusion suivante : $\Sql_S\subset M_S$. L'égalité est en fait vérifiée mais la démonstration est trop technique pour cet exposé, de plus nous n'utiliserons que la première inclusion dans nos démonstrations.
+\end{prop}
+
+\begin{proof}
+	Preuve à insérer.
+\end{proof}
+
 \begin{definition}
-	Soit $S$ une forme géométrique dans $\R^d$. On appelle \textnormal{local feature size} la fonction qui à $s\in S$ associe la distance de $s$ à $M_S$ et on la note $\mathrm{lfs}_S$. Cette dernière est continue (voir le théorème correspondant) $S$ étant compact on appelle \textnormal{reach} et on note $\rho_S = \min_S\mathrm{lfs}_S$
+	Soit $S$ un sous-ensemble de $\R^d$. On appelle \textnormal{local feature size} la fonction qui à $s\in S$ associe la distance de $s$ à $M_S$ et on la note $\mathrm{lfs}_S$.
 \end{definition}
+
+\begin{prop}
+	Soit $S$ un sous-ensemble de $\R^d$. $\lfs_S$ est continue (en fait 1-lipschitzienne).
+\end{prop}
+
+\begin{proof}
+	Preuve à insérer, ou pas.
+\end{proof}
+
+\begin{definition}
+	Si $S$ est un compact de $\R^d$, on appelle \textnormal{reach} et on note $\rho_S = \min_S\mathrm{lfs}_S$. On dit qu'une forme gémométrique est à \textnormal{reach positif} si son reach est strictement positif.
+\end{definition}
+
+\begin{rmq}
+	\`A titre informatif, une forme géométrique à reach positif est au moins une fois différentiable et donc relativement lisse. Cette propriété ne nous sert pas dans cet exposé et sa démonstration utilise des outils de géométrie différentielle que nous avons décidé de ne pas étudier.
+\end{rmq}
 
 \begin{definition}
 	On appelle \textnormal{arc} toute fonction continue de $[0,1]$ dans $\R^d$
 \end{definition}
 
-\begin{definition}[Voronoi et Delaunay restreints]
-	Soit $S$ une forme géométrique dans $\R^d$, soit $P$ un nuage de points de $S$. On appelle \textnormal{Voronoi restreint à $S$ de $P$} l'ensemble $\Vor_S(P)$ des cellules de Voronoi de $P$ qui intersectent $S$ c'est à dire $\Vor_S(P) = \{f\in\Vor(P)\,|\,f\cap S\neq\emptyset\}$. On appelle \textnormal{Delaunay restreint à $S$ de $P$} le sous-complexe $\Del_S(P)$ de $\Del(P)$ dual de $\Vor_S(P)$
+\begin{definition}
+	Soit $S$ une courbe fermée de $\R^2$ à reach positif. Soient $x\in S$ et $r\leq\lfs_S(x)$. On appelle \textnormal{disques tangeants à $S$ en $x$} les deux disques... \textbf{DEFINITION A TERMINER + PREUVE}
 \end{definition}
+
+\begin{lemma}
+	Soit $S$ une courbe fermée de $\R^2$ à reach positif. Soient $x\in S$ et $r\leq\lfs_S(x)$. Soient $D_1$ et $D_2$ les deux disques tangeants à $S$ en $x$. Alors $D_1\cap S\neq\emptyset$ et $D_2\cap S\neq\emptyset$.
+\end{lemma}
+
+\begin{proof}
+	Preuve à insérer.
+\end{proof}
+
+\begin{lemma}
+	Soit $S$ une courbe fermée de $\R^2$ à reach positif. Soit $D$ un disque fermé tel que $D\cap S\neq\emptyset$ et $D\cap S$ n'est pas un arc. Alors $D\cap M_S\neq\emptyset$.
+\end{lemma}
+
+\begin{definition}[Voronoi et Delaunay restreints]
+	Soit $S$ une courbe fermée de $\R^d$, soit $P$ un nuage de points de $S$. 
+	\begin{enumerate}
+		\item On appelle \textnormal{Voronoi restreint à $S$ de $P$} l'ensemble $\Vor_S(P)$ des cellules de Voronoi de $P$ qui intersectent $S$ c'est à dire $\Vor_S(P) = \{f\in\Vor(P)\,|\,f\cap S\neq\emptyset\}$. 
+		\item On appelle \textnormal{Delaunay restreint à $S$ de $P$} le sous-complexe $\Del_S(P)$ de $\Del(P)$ dual de $\Vor_S(P)$
+	\end{enumerate}
+\end{definition}
+
+\begin{definition}
+	Soit $S = s([0,1])$ une courbe fermée continue de $R^2$ et soient $p, \, q\in S$. On appelle \textnormal{arc de $S$ reliant $p$ à $q$} l'ensemble $s\left(\left[s^{-1}(p), s^{-1}(q)\right]\right)$.
+\end{definition}
+
+\begin{definition}
+	Soit $S = s([0,1])$ une courbe fermée continue de $R^2$, soit $W$ un nuage de points de $S$ et soient $p, \, q\in W$. On dit que $p$ et $q$ sont \textnormal{consécutifs le long de $S$} si l'intérieur de l'arc de $S$ reliant $p$ à $q$ est vide de points de $W$.
+\end{definition}
+
+\begin{lemma}
+	Soit $S$ une courbe fermée de $R^2$ à reach positif, soient $\eps>0$ et $W$ un $\eps-échantillon$ de $S$ avec $\eps<\rho_S$. Soit $e = [p, q]$ une arête de $\Del_S(P)$. Alors $p$ et $q$ sont consécutifs le long de $S$ et si on note $c$ l'arc de $S$ reliant $p$ à $q$ et $v$ l'arête de Voronoï duale de $[p, q]$ alors on a $S\cap v\subset c$.
+\end{lemma}
+
+\begin{proof}
+	Preuve à insérer.
+\end{proof}
+
+\begin{theorem}
+	Soit $S$ une courbe fermée de $R^2$ à reach positif, soient $\eps>0$ et $W$ un $\eps-échantillon$ de $S$ avec $\eps<\rho_S$. Alors, $\Del_S(W)$ est homéomorphe à $S$.
+\end{theorem}
+
+\begin{proof}
+	Preuve à insérer.
+\end{proof}
+
+
+\begin{proof}
+	Preuve à insérer.
+\end{proof}
 
 \begin{definition}[Complexe de témoins]
 	Soient $W$ et $L$ deux nuages de points de $\R^d$.
